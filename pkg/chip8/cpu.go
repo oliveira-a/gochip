@@ -20,10 +20,18 @@ type CPU struct {
 }
 
 func New(d Drawer) *CPU {
-	return &CPU{
-		screen: d,
+	cpu := &CPU{
+		screen:         d,
 		programCounter: 0x200,
 	}
+
+	// Load font into memory - it must start at 0x50
+	// as ROMs will be looking for sprites starting there.
+	for i := 0; i < len(font); i++ {
+		cpu.memory[0x50+i] = font[i]
+	}
+
+	return cpu
 }
 
 func (c *CPU) LoadRom(b []byte) error {
@@ -32,8 +40,7 @@ func (c *CPU) LoadRom(b []byte) error {
 	}
 
 	for i := 0; i < len(b); i++ {
-		// Program memory space starts at addr 0x200 (512 in base10)
-		c.memory[i+512] = b[i]
+		c.memory[0x200+1] = b[i]
 	}
 
 	return nil
