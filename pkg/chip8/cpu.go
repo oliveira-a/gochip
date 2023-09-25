@@ -22,6 +22,7 @@ type CPU struct {
 func New(d Drawer) *CPU {
 	return &CPU{
 		screen: d,
+		programCounter: 0x200,
 	}
 }
 
