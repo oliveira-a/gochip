@@ -95,13 +95,22 @@ func (c *CPU) exec(ins uint16) error {
 			}
 			break
 		case 0x00EE:
-			c.sp -= 1
+			// Return from a subroutine.
 			c.pc = c.stack[c.sp]
+			c.sp -= 1
 			break
 		}
 	case 0x1000:
+		// Jump to nnn location.
 		c.pc = nnn
 		break
+	case 0x2000:
+		// Call a subroutine.
+		c.sp += 1
+		c.stack[c.sp] = c.pc
+		c.pc = nnn
+	default:
+		return errors.New("Unknown instrunction encountered.")
 	}
 
 	c.pc += 2

@@ -45,3 +45,16 @@ func TestClearsDisplay(t *testing.T) {
 		}
 	}
 }
+
+func TestReturnsFromASubroutine(t *testing.T) {
+	const ins = 0x00EE
+	const addr = 1
+	c8 := New(nil)
+	c8.sp = addr
+
+	c8.exec(ins)
+
+	if c8.pc != addr && c8.sp != addr-1 {
+		t.Fail()
+	}
+}
