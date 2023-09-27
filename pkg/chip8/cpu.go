@@ -100,7 +100,7 @@ func (c *CPU) exec(ins uint16) error {
 			break
 		}
 	case 0x1000:
-		// Jump to nnn location.
+		// Jump to to the location defined as nnn
 		c.pc = nnn
 		break
 	case 0x2000:

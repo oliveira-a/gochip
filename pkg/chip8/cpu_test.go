@@ -68,7 +68,7 @@ func TestSkipsNextInsIfNNIsEqualToRegisterX(t *testing.T) {
 
 	c8.exec(ins)
 
-	if !hasSkipped(int(initialPc), int(c8.pc)) {
+	if !hasSkipped(initialPc, c8.pc) {
 		t.Fail()
 	}
 }
