@@ -124,6 +124,12 @@ func (c *CPU) exec(ins uint16) error {
 			c.pc += 2
 		}
 		break
+	case 0x6000:
+		c.registers[vX] = uint8(nn)
+		break
+	case 0x7000:
+		c.registers[vX] += uint8(nn)
+		break
 	default:
 		return errors.New("Unknown instrunction encountered.")
 	}

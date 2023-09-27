@@ -103,6 +103,31 @@ func TestSkipsNextInsIfRegXEqualsRegY(t *testing.T) {
 	}
 }
 
+func TestValueNNIsSetToRegisterX(t *testing.T) {
+	const ins = 0x6a02
+	c8 := New(nil)
+
+	c8.exec(ins)
+
+	if uint16(c8.registers[registerX(ins)]) != nn(ins) {
+		t.Fail()
+	}
+}
+
+func TestAddsNNValueToRegisterX(t *testing.T) {
+	const ins = 0x7b02
+	const rX = (ins & 0x0f00) >> 8
+	c8 := New(nil)
+	c8.registers[rX] = 1
+	expected := uint8(1 + (ins & 0x00ff))
+
+	c8.exec(ins)
+
+	if c8.registers[rX] != expected {
+		t.Fail()
+	}
+}
+
 func hasSkipped(initial, current uint16) bool {
 	return (current - initial) == 4
 }
