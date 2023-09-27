@@ -61,13 +61,32 @@ func TestReturnsFromASubroutine(t *testing.T) {
 
 func TestSkipsNextInsIfNNIsEqualToRegisterX(t *testing.T) {
 	const ins = 0x3f01
+	const reg = (ins & 0x0f00) >> 8
 	c8 := New(nil)
 	initialPc := c8.pc
-	c8.registers[0x000f] = (ins & 0x00FF)
+	c8.registers[reg] = (ins & 0x00ff)
 
 	c8.exec(ins)
 
-	if (c8.pc - initialPc) != 4 {
+	if !hasSkipped(int(initialPc), int(c8.pc)) {
 		t.Fail()
 	}
+}
+
+func TestSkipsNextInsIfRegXNotEqualsNN(t *testing.T) {
+	const ins = 0x463f
+	const reg = (ins & 0x0f00) >> 8
+	c8 := New(nil)
+	initialPc := c8.pc
+	c8.registers[reg] = 0x0012 // random value
+
+	c8.exec(ins)
+
+	if !hasSkipped(int(initialPc), int(c8.pc)) {
+		t.Fail()
+	}
+}
+
+func hasSkipped(initial int, current int) bool {
+	return (current - initial) == 4
 }

@@ -79,14 +79,9 @@ func (c *CPU) exec(ins uint16) error {
 
 	vX := registerX(ins)
 
-	n := n(ins)
+	_ = n(ins)
 	nn := nn(ins)
 	nnn := nnn(ins)
-
-	printHex(opcode)
-	printHex(n)
-	printHex(nn)
-	printHex(nnn)
 
 	switch opcode {
 	case 0x0000:
@@ -112,13 +107,19 @@ func (c *CPU) exec(ins uint16) error {
 		c.sp += 1
 		c.stack[c.sp] = c.pc
 		c.pc = nnn
+		break
 	case 0x3000:
 		// Skip the next instruction if value of register 'x' is the same as nn.
-		if vX == nn {
+		if uint16(c.registers[vX]) == nn {
 			c.pc += 2
 		}
-		c.pc += 2
-
+		break
+	case 0x4000:
+		// Skip next instrunction if vx != nn
+		if uint16(c.registers[vX]) != nn {
+			c.pc += 2
+		}
+		break
 	default:
 		return errors.New("Unknown instrunction encountered.")
 	}
