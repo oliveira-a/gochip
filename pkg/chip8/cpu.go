@@ -78,6 +78,7 @@ func (c *CPU) exec(ins uint16) error {
 	opcode := opcode(ins)
 
 	vX := registerX(ins)
+	vY := registerY(ins)
 
 	_ = n(ins)
 	nn := nn(ins)
@@ -109,14 +110,17 @@ func (c *CPU) exec(ins uint16) error {
 		c.pc = nnn
 		break
 	case 0x3000:
-		// Skip the next instruction if value of register 'x' is the same as nn.
 		if uint16(c.registers[vX]) == nn {
 			c.pc += 2
 		}
 		break
 	case 0x4000:
-		// Skip next instrunction if vx != nn
 		if uint16(c.registers[vX]) != nn {
+			c.pc += 2
+		}
+		break
+	case 0x5000:
+		if uint16(c.registers[vX]) == uint16(c.registers[vY]) {
 			c.pc += 2
 		}
 		break
@@ -135,6 +139,10 @@ func opcode(ins uint16) uint16 {
 
 func registerX(ins uint16) uint16 {
 	return uint16((ins & 0x0F00) >> 8)
+}
+
+func registerY(ins uint16) uint16 {
+	return uint16((ins & 0x00F0) >> 4)
 }
 
 func n(ins uint16) uint16 {

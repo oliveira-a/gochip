@@ -82,11 +82,27 @@ func TestSkipsNextInsIfRegXNotEqualsNN(t *testing.T) {
 
 	c8.exec(ins)
 
-	if !hasSkipped(int(initialPc), int(c8.pc)) {
+	if !hasSkipped(initialPc, c8.pc) {
 		t.Fail()
 	}
 }
 
-func hasSkipped(initial int, current int) bool {
+func TestSkipsNextInsIfRegXEqualsRegY(t *testing.T) {
+	const ins = 0x5630
+	const rX = (ins & 0x0f00) >> 8
+	const rY = (ins & 0x00f0) >> 4
+	c8 := New(nil)
+	c8.registers[rX] = 0x1
+	c8.registers[rY] = 0x1
+	initialPc := c8.pc
+
+	c8.exec(ins)
+
+	if !hasSkipped(initialPc, c8.pc) {
+		t.Fail()
+	}
+}
+
+func hasSkipped(initial, current uint16) bool {
 	return (current - initial) == 4
 }
