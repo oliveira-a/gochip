@@ -58,3 +58,16 @@ func TestReturnsFromASubroutine(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestSkipsNextInsIfNNIsEqualToRegisterX(t *testing.T) {
+	const ins = 0x3f01
+	c8 := New(nil)
+	initialPc := c8.pc
+	c8.registers[0x000f] = (ins & 0x00FF)
+
+	c8.exec(ins)
+
+	if (c8.pc - initialPc) != 4 {
+		t.Fail()
+	}
+}

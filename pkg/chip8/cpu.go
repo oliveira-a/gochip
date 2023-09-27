@@ -76,6 +76,9 @@ func (c *CPU) Run() error {
 
 func (c *CPU) exec(ins uint16) error {
 	opcode := opcode(ins)
+
+	vX := registerX(ins)
+
 	n := n(ins)
 	nn := nn(ins)
 	nnn := nnn(ins)
@@ -109,6 +112,13 @@ func (c *CPU) exec(ins uint16) error {
 		c.sp += 1
 		c.stack[c.sp] = c.pc
 		c.pc = nnn
+	case 0x3000:
+		// Skip the next instruction if value of register 'x' is the same as nn.
+		if vX == nn {
+			c.pc += 2
+		}
+		c.pc += 2
+
 	default:
 		return errors.New("Unknown instrunction encountered.")
 	}
@@ -120,6 +130,10 @@ func (c *CPU) exec(ins uint16) error {
 
 func opcode(ins uint16) uint16 {
 	return ins & 0xF000
+}
+
+func registerX(ins uint16) uint16 {
+	return uint16((ins & 0x0F00) >> 8)
 }
 
 func n(ins uint16) uint16 {
