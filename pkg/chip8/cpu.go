@@ -130,6 +130,54 @@ func (c *CPU) exec(ins uint16) error {
 	case 0x7000:
 		c.registers[vX] += uint8(nn)
 		break
+	case 0x8000:
+		switch ins & 0x000f {
+		case 0x0:
+			c.registers[vX] = c.registers[vY]
+			break
+		case 0x1:
+			c.registers[vX] |= c.registers[vY]
+			break
+		case 0x2:
+			c.registers[vX] &= c.registers[vY]
+			break
+		case 0x3:
+			c.registers[vX] ^= c.registers[vY]
+			break
+		case 0x4:
+			var r uint16 = uint16(c.registers[vX]) + uint16(c.registers[vY])
+			if r > 0xff {
+				c.registers[0xf] = 1
+			} else {
+				c.registers[0xf] = 0
+			}
+			c.registers[vX] = uint8(r & 0x00ff)
+			break
+		case 0x5:
+			if c.registers[vX] > c.registers[vY] {
+				c.registers[0xf] = 1
+			} else {
+				c.registers[0xf] = 0
+			}
+			c.registers[vX] -= c.registers[vY]
+			break
+		case 0x6:
+			c.registers[0xf] = c.registers[vX] & 1
+			c.registers[vX] /= 2
+			break
+		case 0x7:
+			if c.registers[vY] > c.registers[vX] {
+				c.registers[0xf] = 1
+			} else {
+				c.registers[0xf] = 0
+			}
+			c.registers[vX] = c.registers[vY] - c.registers[vX]
+			break
+		case 0xe:
+			c.registers[0xf] = c.registers[vX] >> 7
+			c.registers[vX] *= 2
+			break
+		}
 	default:
 		return errors.New("Unknown instrunction encountered.")
 	}
