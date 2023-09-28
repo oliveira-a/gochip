@@ -320,6 +320,46 @@ func TestRegXGetsMultipliedByTwo(t *testing.T) {
 	}
 }
 
+func TestSkipsNextInsIfRegXAndRegYAreEqual(t *testing.T) {
+	var ins uint16 = 0x9120
+	rX, rY := registersXAndYFromIns(ins)
+	c8 := New(nil)
+	initialPc := c8.pc
+	c8.registers[rX] = 1
+	c8.registers[rY] = 0
+
+	c8.exec(ins)
+
+	if !hasSkipped(initialPc, c8.pc) {
+		t.Fail()
+	}
+}
+
+func TestSetsRegIToNNN(t *testing.T) {
+	var ins uint16 = 0xa2f0
+	var nnn uint16 = ins & 0x0fff
+	c8 := New(nil)
+
+	c8.exec(ins)
+
+	if c8.ir != nnn {
+		t.Fail()
+	}
+}
+
+func TestJumpsToLocationNNNAndAddsRegister0(t *testing.T) {
+	var ins uint16 = 0xb2f0
+	var nnn uint16 = ins & 0x0fff
+	c8 := New(nil)
+	c8.registers[0] = 1
+
+	c8.exec(ins)
+
+	if c8.pc != (uint16(c8.registers[0]) + nnn) {
+		t.Fail()
+	}
+}
+
 func registersXAndYFromIns(ins uint16) (uint16, uint16) {
 	return ((ins & 0x0f00) >> 8), ((ins & 0x00f0) >> 4)
 }
