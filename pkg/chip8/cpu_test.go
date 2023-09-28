@@ -360,6 +360,19 @@ func TestJumpsToLocationNNNAndAddsRegister0(t *testing.T) {
 	}
 }
 
+func TestSetsRegXToRandomgByte(t *testing.T) {
+	var ins uint16 = 0xc717
+	rX, _ := registersXAndYFromIns(ins)
+	c8 := New(nil)
+	c8.registers[rX] = 1
+
+	c8.exec(ins)
+
+	if c8.registers[rX] == 1 {
+		t.Fail()
+	}
+}
+
 func registersXAndYFromIns(ins uint16) (uint16, uint16) {
 	return ((ins & 0x0f00) >> 8), ((ins & 0x00f0) >> 4)
 }

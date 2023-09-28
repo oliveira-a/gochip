@@ -3,6 +3,8 @@ package chip8
 import (
 	"errors"
 	"fmt"
+	"math/rand"
+	"time"
 )
 
 const (
@@ -189,6 +191,19 @@ func (c *CPU) exec(ins uint16) error {
 	case 0xb000:
 		c.pc = uint16(c.registers[0]) + nnn
 		c.pc -= 2
+		break
+	case 0xc000:
+		for {
+			s := rand.NewSource(time.Now().UnixMilli())
+			r := rand.New(s)
+			num := uint16(r.Intn(255))
+
+			val := uint8(num & nn)
+			if c.registers[vX] != val {
+				c.registers[vX] = val
+				break
+			}
+		}
 		break
 	default:
 		return errors.New("Unknown instrunction encountered.")
