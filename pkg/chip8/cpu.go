@@ -217,10 +217,6 @@ func (c *CPU) exec(ins uint16) error {
 				draw := (sprite >> bit) % 2
 				x, y := (c.registers[vX]+uint8(bit))%Cols, (c.registers[vY]+uint8(i))%Rows
 
-				if draw == 1 {
-					fmt.Printf("row %d: %d\n", y, draw)
-				}
-
 				dBit := c.display[x][y] ^ draw
 				c.display[x][y] = dBit
 
@@ -229,7 +225,6 @@ func (c *CPU) exec(ins uint16) error {
 					c.registers[0xf] = 1
 				}
 			}
-			println()
 		}
 
 		break
