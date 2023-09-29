@@ -24,7 +24,7 @@ func TestFontIsLoadedToCorrectMemorySpace(t *testing.T) {
 	c8 := New(nil)
 
 	for i := 0; i < len(font); i++ {
-		if c8.memory[0x50+i] != font[i] {
+		if c8.memory[i] != font[i] {
 			t.Fail()
 		}
 	}
@@ -33,15 +33,15 @@ func TestFontIsLoadedToCorrectMemorySpace(t *testing.T) {
 func TestClearsDisplay(t *testing.T) {
 	var ins uint16 = 0x00E0
 	c8 := New(nil)
-	for i := 0; i < len(c8.display); i++ {
-		c8.display[i] = 1
-	}
+	c8.display[Rows/2][Rows/2] = 1
 
 	c8.exec(ins)
 
-	for i := 0; i < len(c8.display); i++ {
-		if c8.display[i] != 0 {
-			t.Fail()
+	for y := 0; y < Rows; y++ {
+		for x := 0; x < Cols; x++ {
+			if c8.display[x][y] != 0 {
+				t.Fail()
+			}
 		}
 	}
 }

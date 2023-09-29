@@ -16,7 +16,7 @@ const (
 
 type CPU struct {
 	drawer  Drawer
-	display [Cols * Rows]uint8
+	display [Cols][Rows]uint8 // x, y
 
 	memory    [4096]uint8
 	registers [16]uint8
@@ -45,10 +45,8 @@ func New(d Drawer) *CPU {
 		pc:     0x200,
 	}
 
-	// Load font into memory - it must start at 0x50
-	// as ROMs will be looking for sprites starting there.
 	for i := 0; i < len(font); i++ {
-		cpu.memory[0x50+i] = font[i]
+		cpu.memory[i] = font[i]
 	}
 
 	return cpu
@@ -82,7 +80,7 @@ func (c *CPU) exec(ins uint16) error {
 	vX := registerX(ins)
 	vY := registerY(ins)
 
-	_ = n(ins)
+	n := n(ins)
 	nn := nn(ins)
 	nnn := nnn(ins)
 
@@ -91,8 +89,10 @@ func (c *CPU) exec(ins uint16) error {
 		switch ins {
 		case 0x00E0:
 			// Clear the display.
-			for i := 0; i < len(c.display); i++ {
-				c.display[i] = 0
+			for y := 0; y < Rows; y++ {
+				for x := 0; x < Cols; x++ {
+					c.display[x][y] = 0
+				}
 			}
 			break
 		case 0x00EE:
@@ -204,6 +204,34 @@ func (c *CPU) exec(ins uint16) error {
 				break
 			}
 		}
+		break
+	case 0xd000:
+		// Draw the sprite starting at memory location I.
+		c.registers[0xf] = 0
+		height := n
+		width := 8
+
+		for i := 0; i < int(height); i++ {
+			sprite := c.memory[c.ir+uint16(i)]
+			for bit := 0; bit < width; bit++ {
+				draw := (sprite >> bit) % 2
+				x, y := (c.registers[vX]+uint8(bit))%Cols, (c.registers[vY]+uint8(i))%Rows
+
+				if draw == 1 {
+					fmt.Printf("row %d: %d\n", y, draw)
+				}
+
+				dBit := c.display[x][y] ^ draw
+				c.display[x][y] = dBit
+
+				// If any bit got erased, then set vF to carry.
+				if dBit == 0 {
+					c.registers[0xf] = 1
+				}
+			}
+			println()
+		}
+
 		break
 	default:
 		return errors.New("Unknown instrunction encountered.")
