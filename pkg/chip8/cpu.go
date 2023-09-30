@@ -3,6 +3,7 @@ package chip8
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -14,9 +15,9 @@ const (
 	Fps   = 60
 )
 
-type CPU struct {
-	drawer  Drawer
-	display [Cols][Rows]uint8 // x, y
+type VM struct {
+	// Display memory
+	vram [Cols][Rows]uint8
 
 	memory    [4096]uint8
 	registers [16]uint8
@@ -39,10 +40,14 @@ type CPU struct {
 	st uint16
 }
 
-func New(d Drawer) *CPU {
-	cpu := &CPU{
-		drawer: d,
-		pc:     0x200,
+func New() *VM {
+	// TODO: Perhaps move this to the constructor
+	// injected. Maybe the whole logger instance?
+	log.SetPrefix("CHIP-8: ")
+	log.SetFlags(log.Ltime)
+
+	cpu := &VM{
+		pc: 0x200,
 	}
 
 	for i := 0; i < len(font); i++ {
@@ -52,7 +57,7 @@ func New(d Drawer) *CPU {
 	return cpu
 }
 
-func (c *CPU) LoadRom(b []byte) error {
+func (c *VM) LoadRom(b []byte) error {
 	if len(b) > len(c.memory)-512 {
 		return errors.New("Rom buffer has exceeded the maximum size.")
 	}
@@ -64,17 +69,17 @@ func (c *CPU) LoadRom(b []byte) error {
 	return nil
 }
 
-func (c *CPU) Run() error {
-	ins := (uint16(c.memory[c.pc]) << 8) | uint16(c.memory[c.pc+1])
+func (vm *VM) Run() error {
+	var ins uint16 = uint16(vm.memory[vm.pc])<<8 | uint16(vm.memory[vm.pc+1])
 
-	if err := c.exec(ins); err != nil {
+	if err := vm.exec(ins); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c *CPU) exec(ins uint16) error {
+func (vm *VM) exec(ins uint16) error {
 	opcode := opcode(ins)
 
 	vX := registerX(ins)
@@ -88,151 +93,244 @@ func (c *CPU) exec(ins uint16) error {
 	case 0x0000:
 		switch ins {
 		case 0x00E0:
-			// Clear the display.
+			logInstruction(ins, "Clear the display.")
 			for y := 0; y < Rows; y++ {
 				for x := 0; x < Cols; x++ {
-					c.display[x][y] = 0
+					vm.vram[x][y] = 0
 				}
 			}
+			vm.pc += 2
 			break
 		case 0x00EE:
-			// Return from a subroutine.
-			c.pc = c.stack[c.sp]
-			c.sp -= 1
+			logInstruction(ins, "Return from a subroutine.")
+			vm.pc = vm.stack[vm.sp] + 2
+			vm.sp--
 			break
 		}
 	case 0x1000:
-		// Jump to to the location defined as nnn
-		c.pc = nnn
+		logInstruction(ins, "Jump to the location.")
+		vm.pc = nnn
 		break
 	case 0x2000:
-		// Call a subroutine.
-		c.sp += 1
-		c.stack[c.sp] = c.pc
-		c.pc = nnn
+		logInstruction(ins, "Call a subroutine.")
+		vm.sp += 1
+		vm.stack[vm.sp] = vm.pc
+		vm.pc = nnn
 		break
 	case 0x3000:
-		if uint16(c.registers[vX]) == nn {
-			c.pc += 2
+		logInstruction(ins, "Skip the next instruction if vX = nn.")
+		if uint16(vm.registers[vX]) == nn {
+			vm.pc += 4
+		} else {
+			vm.pc += 2
 		}
 		break
 	case 0x4000:
-		if uint16(c.registers[vX]) != nn {
-			c.pc += 2
+		logInstruction(ins, "Skip the next instrunction if vX != vY.")
+		if uint16(vm.registers[vX]) != nn {
+			vm.pc += 2
+		} else {
+			vm.pc += 2
 		}
 		break
 	case 0x5000:
-		if uint16(c.registers[vX]) == uint16(c.registers[vY]) {
-			c.pc += 2
+		logInstruction(ins, "Skip the next instrunction if vX != vY.")
+		if uint16(vm.registers[vX]) == uint16(vm.registers[vY]) {
+			vm.pc += 4
+		} else {
+			vm.pc += 2
 		}
 		break
 	case 0x6000:
-		c.registers[vX] = uint8(nn)
+		logInstruction(ins, "Skip the next instrunction if vX = vY.")
+		vm.registers[vX] = uint8(nn)
+		vm.pc += 2
 		break
 	case 0x7000:
-		c.registers[vX] += uint8(nn)
+		logInstruction(ins, "Set vX = vX + nn.")
+		vm.registers[vX] += uint8(nn)
+		vm.pc += 2
 		break
 	case 0x8000:
-		switch ins & 0x000f {
+		switch n {
 		case 0x0:
-			c.registers[vX] = c.registers[vY]
+			logInstruction(ins, "Set vX = vY.")
+			vm.registers[vX] = vm.registers[vY]
+			vm.pc += 2
 			break
 		case 0x1:
-			c.registers[vX] |= c.registers[vY]
+			logInstruction(ins, "Set vX |= vY.")
+			vm.registers[vX] |= vm.registers[vY]
+			vm.pc += 2
 			break
 		case 0x2:
-			c.registers[vX] &= c.registers[vY]
+			logInstruction(ins, "Set vX &= vY.")
+			vm.registers[vX] &= vm.registers[vY]
+			vm.pc += 2
 			break
 		case 0x3:
-			c.registers[vX] ^= c.registers[vY]
+			logInstruction(ins, "Set vX ^= vY.")
+			vm.registers[vX] ^= vm.registers[vY]
+			vm.pc += 2
 			break
 		case 0x4:
-			var r uint16 = uint16(c.registers[vX]) + uint16(c.registers[vY])
+			logInstruction(ins, "Set vX = vX + vY, set VF = carry.")
+			var r uint16 = uint16(vm.registers[vX]) + uint16(vm.registers[vY])
 			if r > 0xff {
-				c.registers[0xf] = 1
+				vm.registers[0xf] = 1
 			} else {
-				c.registers[0xf] = 0
+				vm.registers[0xf] = 0
 			}
-			c.registers[vX] = uint8(r & 0x00ff)
+			vm.registers[vX] = uint8(r & 0x00ff)
+			vm.pc += 2
 			break
 		case 0x5:
-			if c.registers[vX] > c.registers[vY] {
-				c.registers[0xf] = 1
+			logInstruction(ins, "Set vX = vX - vY, set VF = NOT borrow.")
+			if vm.registers[vX] > vm.registers[vY] {
+				vm.registers[0xf] = 1
 			} else {
-				c.registers[0xf] = 0
+				vm.registers[0xf] = 0
 			}
-			c.registers[vX] -= c.registers[vY]
+			vm.registers[vX] -= vm.registers[vY]
+			vm.pc += 2
 			break
 		case 0x6:
-			c.registers[0xf] = c.registers[vX] & 1
-			c.registers[vX] /= 2
+			logInstruction(ins, "Set vX = vX SHR 1.")
+			vm.registers[0xf] = vm.registers[vX] & 1
+			vm.registers[vX] /= 2
+			vm.pc += 2
 			break
 		case 0x7:
-			if c.registers[vY] > c.registers[vX] {
-				c.registers[0xf] = 1
+			logInstruction(ins, "Set vX = vX - vY, set VF = NOT borrow.")
+			if vm.registers[vY] > vm.registers[vX] {
+				vm.registers[0xf] = 1
 			} else {
-				c.registers[0xf] = 0
+				vm.registers[0xf] = 0
 			}
-			c.registers[vX] = c.registers[vY] - c.registers[vX]
+			vm.registers[vX] = vm.registers[vY] - vm.registers[vX]
+			vm.pc += 2
 			break
 		case 0xe:
-			c.registers[0xf] = c.registers[vX] >> 7
-			c.registers[vX] *= 2
+			logInstruction(ins, "Set vX = vX SHL 1.")
+			vm.registers[0xf] = vm.registers[vX] >> 7
+			vm.registers[vX] *= 2
+			vm.pc += 2
 			break
 		}
 	case 0x9000:
-		if c.registers[vX] != c.registers[vY] {
-			c.pc += 2
+		logInstruction(ins, "Skip next instrunction if vX != vY.")
+		if vm.registers[vX] != vm.registers[vY] {
+			vm.pc += 4
+		} else {
+			vm.pc += 2
 		}
 		break
 	case 0xa000:
-		c.ir = nnn
+		logInstruction(ins, "Set vI to nnn.")
+		vm.ir = nnn
+		vm.pc += 2
 		break
 	case 0xb000:
-		c.pc = uint16(c.registers[0]) + nnn
-		c.pc -= 2
+		logInstruction(ins, "Jump to location nnn + v0.")
+		vm.pc = uint16(vm.registers[0]) + nnn
+		vm.pc += 2
 		break
 	case 0xc000:
+		logInstruction(ins, "Set vX = random byte AND nn.")
 		for {
 			s := rand.NewSource(time.Now().UnixMilli())
 			r := rand.New(s)
 			num := uint16(r.Intn(255))
 
 			val := uint8(num & nn)
-			if c.registers[vX] != val {
-				c.registers[vX] = val
+			if vm.registers[vX] != val {
+				vm.registers[vX] = val
 				break
 			}
 		}
+		vm.pc += 2
 		break
 	case 0xd000:
+		logInstruction(ins, "Draw.")
 		// Draw the sprite starting at memory location I.
-		c.registers[0xf] = 0
+		vm.registers[0xf] = 0
 		height := n
 		width := 8
 
 		for i := 0; i < int(height); i++ {
-			sprite := c.memory[c.ir+uint16(i)]
+			sprite := vm.memory[vm.ir+uint16(i)]
 			for bit := 0; bit < width; bit++ {
 				draw := (sprite >> bit) % 2
-				x, y := (c.registers[vX]+uint8(bit))%Cols, (c.registers[vY]+uint8(i))%Rows
+				x, y := (vm.registers[vX]+uint8(bit))%Cols, (vm.registers[vY]+uint8(i))%Rows
 
-				dBit := c.display[x][y] ^ draw
-				c.display[x][y] = dBit
+				isDraw := vm.vram[x][y] ^ draw
+				vm.vram[x][y] = isDraw
 
 				// If any bit got erased, then set vF to carry.
-				if dBit == 0 {
-					c.registers[0xf] = 1
+				if isDraw == 0 {
+					vm.registers[0xf] = 1
 				}
 			}
 		}
-
+		vm.pc += 2
 		break
+	case 0xe000:
+		switch nn {
+		case 0x9e:
+			logInstruction(ins, "Skip next instrunction if key with value of vX is pressed.")
+			// TODO
+			vm.pc += 2
+			break
+		case 0xa1:
+			logInstruction(ins, "Skip next instrunction if key with value of vX is no pressed.")
+			// TODO
+			vm.pc += 2
+			break
+		}
+		break
+	case 0xf000:
+		switch nn {
+		case 0x07:
+			logInstruction(ins, "Set vX = delay timer value.")
+			vm.memory[vX] = uint8(vm.dt)
+			vm.pc += 2
+			break
+		case 0x0a:
+			logInstruction(ins, "Wait for a key press. Store the value of the key in vX.")
+			vm.pc += 2
+			break
+		case 0x15:
+			logInstruction(ins, "Set the delay timer to vX.")
+			vm.pc += 2
+			break
+		case 0x18:
+			logInstruction(ins, "Set sound timer = vX.")
+			vm.pc += 2
+			break
+		case 0x1e:
+			logInstruction(ins, "Set I = I + vX.")
+			vm.pc += 2
+			break
+		case 0x29:
+			logInstruction(ins, "Set I = location of sprite for digit vX.")
+			vm.pc += 2
+			break
+		case 0x33:
+			logInstruction(ins, "Store BCD representation of vX in memory location I, I+1, and I+2")
+			vm.pc += 2
+			break
+		case 0x55:
+			logInstruction(ins, "Store registers v0 through vX in memory locations I.")
+			vm.pc += 2
+			break
+		case 0x65:
+			logInstruction(ins, "Read registers v0 through vX from memory starting at location I.")
+			vm.pc += 2
+			break
+		}
 	default:
-		return errors.New("Unknown instrunction encountered.")
+		return errors.New(fmt.Sprintf("Unsupported instruction: %04x", ins))
 	}
-
-	c.pc += 2
 
 	return nil
 }
@@ -261,6 +359,6 @@ func nnn(ins uint16) uint16 {
 	return ins & 0x0FFF
 }
 
-func printHex(v uint16) {
-	fmt.Printf("%s\n", fmt.Sprintf("%x", v))
+func logInstruction(ins uint16, msg string) {
+	log.Printf("| Executing '%04x': %s\n", ins, msg)
 }
