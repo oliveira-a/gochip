@@ -130,7 +130,7 @@ func (vm *VM) exec(ins uint16) error {
 		if uint16(vm.registers[vX]) != nn {
 			vm.pc += 2
 		} else {
-			vm.pc += 2
+			vm.pc += 4
 		}
 		break
 	case 0x5000:
@@ -233,7 +233,6 @@ func (vm *VM) exec(ins uint16) error {
 	case 0xb000:
 		logInstruction(ins, "Jump to location nnn + v0.")
 		vm.pc = uint16(vm.registers[0]) + nnn
-		vm.pc += 2
 		break
 	case 0xc000:
 		logInstruction(ins, "Set vX = random byte AND nn.")
@@ -279,7 +278,11 @@ func (vm *VM) exec(ins uint16) error {
 		case 0x9e:
 			logInstruction(ins, "Skip next instrunction if key with value of vX is pressed.")
 			// TODO
-			vm.pc += 2
+			if vm.keys[uint16(vm.registers[vX])] == Pressed {
+				vm.pc += 4
+			} else {
+				vm.pc += 2
+			}
 			break
 		case 0xa1:
 			logInstruction(ins, "Skip next instrunction if key with value of vX is no pressed.")

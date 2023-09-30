@@ -1,11 +1,25 @@
 package chip8
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
+
+var vm *VM
+
+func setup() {
+	vm = New()
+}
+
+func TestMain(m *testing.M) {
+	setup()
+	code := m.Run()
+	os.Exit(code)
+}
 
 func TestEmptyRomReturnsError(t *testing.T) {
 
-	c8 := New(nil)
-	err := c8.LoadRom(make([]byte, 4097))
+	err := vm.LoadRom(make([]byte, 4097))
 
 	if err == nil {
 		t.Fail()
@@ -13,18 +27,14 @@ func TestEmptyRomReturnsError(t *testing.T) {
 }
 
 func TestProgramCounterStartsAt0x200(t *testing.T) {
-	c8 := New(nil)
-
-	if c8.pc != 0x200 {
+	if vm.pc != 0x200 {
 		t.Fail()
 	}
 }
 
 func TestFontIsLoadedToCorrectMemorySpace(t *testing.T) {
-	c8 := New(nil)
-
 	for i := 0; i < len(font); i++ {
-		if c8.memory[i] != font[i] {
+		if vm.memory[i] != font[i] {
 			t.Fail()
 		}
 	}
@@ -32,14 +42,14 @@ func TestFontIsLoadedToCorrectMemorySpace(t *testing.T) {
 
 func TestClearsDisplay(t *testing.T) {
 	var ins uint16 = 0x00E0
-	c8 := New(nil)
-	c8.vram[Rows/2][Rows/2] = 1
 
-	c8.exec(ins)
+	vm.vram[Rows/2][Rows/2] = 1
+
+	vm.exec(ins)
 
 	for y := 0; y < Rows; y++ {
 		for x := 0; x < Cols; x++ {
-			if c8.vram[x][y] != 0 {
+			if vm.vram[x][y] != 0 {
 				t.Fail()
 			}
 		}
@@ -49,12 +59,12 @@ func TestClearsDisplay(t *testing.T) {
 func TestReturnsFromASubroutine(t *testing.T) {
 	var ins uint16 = 0x00EE
 	var addr uint16 = 1
-	c8 := New(nil)
-	c8.sp = addr
 
-	c8.exec(ins)
+	vm.sp = addr
 
-	if c8.pc != addr && c8.sp != addr-1 {
+	vm.exec(ins)
+
+	if vm.pc != addr && vm.sp != addr-1 {
 		t.Fail()
 	}
 }
@@ -62,13 +72,13 @@ func TestReturnsFromASubroutine(t *testing.T) {
 func TestSkipsNextInsIfNNIsEqualToRegisterX(t *testing.T) {
 	var ins uint16 = 0x3f01
 	var reg uint16 = (ins & 0x0f00) >> 8
-	c8 := New(nil)
-	initialPc := c8.pc
-	c8.registers[reg] = uint8(ins & 0x00ff)
 
-	c8.exec(ins)
+	initialPc := vm.pc
+	vm.registers[reg] = uint8(ins & 0x00ff)
 
-	if !hasSkipped(initialPc, c8.pc) {
+	vm.exec(ins)
+
+	if !hasSkipped(initialPc, vm.pc) {
 		t.Fail()
 	}
 }
@@ -76,13 +86,13 @@ func TestSkipsNextInsIfNNIsEqualToRegisterX(t *testing.T) {
 func TestSkipsNextInsIfRegXNotEqualsNN(t *testing.T) {
 	var ins uint16 = 0x463f
 	var reg uint16 = (ins & 0x0f00) >> 8
-	c8 := New(nil)
-	initialPc := c8.pc
-	c8.registers[reg] = 0x0012 // random value
 
-	c8.exec(ins)
+	initialPc := vm.pc
+	vm.registers[reg] = 0x0012 // random value
 
-	if !hasSkipped(initialPc, c8.pc) {
+	vm.exec(ins)
+
+	if !hasSkipped(initialPc, vm.pc) {
 		t.Fail()
 	}
 }
@@ -91,25 +101,24 @@ func TestSkipsNextInsIfRegXEqualsRegY(t *testing.T) {
 	var ins uint16 = 0x5630
 	var rX uint16 = (ins & 0x0f00) >> 8
 	var rY uint16 = (ins & 0x00f0) >> 4
-	c8 := New(nil)
-	c8.registers[rX] = 0x1
-	c8.registers[rY] = 0x1
-	initialPc := c8.pc
 
-	c8.exec(ins)
+	vm.registers[rX] = 0x1
+	vm.registers[rY] = 0x1
+	initialPc := vm.pc
 
-	if !hasSkipped(initialPc, c8.pc) {
+	vm.exec(ins)
+
+	if !hasSkipped(initialPc, vm.pc) {
 		t.Fail()
 	}
 }
 
 func TestValueNNIsSetToRegisterX(t *testing.T) {
 	var ins uint16 = 0x6a02
-	c8 := New(nil)
 
-	c8.exec(ins)
+	vm.exec(ins)
 
-	if uint16(c8.registers[registerX(ins)]) != nn(ins) {
+	if uint16(vm.registers[registerX(ins)]) != nn(ins) {
 		t.Fail()
 	}
 }
@@ -117,13 +126,13 @@ func TestValueNNIsSetToRegisterX(t *testing.T) {
 func TestAddsNNValueToRegisterX(t *testing.T) {
 	var ins uint16 = 0x7b02
 	var rX uint16 = (ins & 0x0f00) >> 8
-	c8 := New(nil)
-	c8.registers[rX] = 1
+
+	vm.registers[rX] = 1
 	expected := uint8(1 + (ins & 0x00ff))
 
-	c8.exec(ins)
+	vm.exec(ins)
 
-	if c8.registers[rX] != expected {
+	if vm.registers[rX] != expected {
 		t.Fail()
 	}
 }
@@ -132,12 +141,12 @@ func TestStoresValueOfRegXInRegY(t *testing.T) {
 	var ins uint16 = 0x8070
 	var rX uint16 = (ins & 0x0f00) >> 8
 	var rY uint16 = (ins & 0x00f0) >> 4
-	c8 := New(nil)
-	c8.registers[rY] = 1
 
-	c8.exec(ins)
+	vm.registers[rY] = 1
 
-	if c8.registers[rX] != c8.registers[rY] {
+	vm.exec(ins)
+
+	if vm.registers[rX] != vm.registers[rY] {
 		t.Fail()
 	}
 }
@@ -146,13 +155,13 @@ func TestStoresBitwiseOrOnRegXAndRegYAndStoresInRegX(t *testing.T) {
 	var ins uint16 = 0x8121
 	var rX uint16 = (ins & 0x0f00) >> 8
 	var rY uint16 = (ins & 0x00f0) >> 4
-	c8 := New(nil)
-	c8.registers[rX] = 0x0
-	c8.registers[rY] = 0xf
 
-	c8.exec(ins)
+	vm.registers[rX] = 0x0
+	vm.registers[rY] = 0xf
 
-	if c8.registers[rX] != 0xf {
+	vm.exec(ins)
+
+	if vm.registers[rX] != 0xf {
 		t.Fail()
 	}
 }
@@ -161,13 +170,13 @@ func TestStoresBitwiseAndOnRegXAndRegYAndStoresInRegX(t *testing.T) {
 	var ins uint16 = 0x8122
 	var rX uint16 = (ins & 0x0f00) >> 8
 	var rY uint16 = (ins & 0x00f0) >> 4
-	c8 := New(nil)
-	c8.registers[rX] = 0x0
-	c8.registers[rY] = 0xf
 
-	c8.exec(ins)
+	vm.registers[rX] = 0x0
+	vm.registers[rY] = 0xf
 
-	if c8.registers[rX] == 0xf {
+	vm.exec(ins)
+
+	if vm.registers[rX] == 0xf {
 		t.Fail()
 	}
 }
@@ -176,13 +185,13 @@ func TestStoresBitwiseXorOnRegXAndRegYAndStoresInRegX(t *testing.T) {
 	var ins uint16 = 0x8123
 	var rX uint16 = (ins & 0x0f00) >> 8
 	var rY uint16 = (ins & 0x00f0) >> 4
-	c8 := New(nil)
-	c8.registers[rX] = 0x0
-	c8.registers[rY] = 0x0
 
-	c8.exec(ins)
+	vm.registers[rX] = 0x0
+	vm.registers[rY] = 0x0
 
-	if c8.registers[rX] == 0xf {
+	vm.exec(ins)
+
+	if vm.registers[rX] == 0xf {
 		t.Fail()
 	}
 }
@@ -191,13 +200,13 @@ func TestSetsCarryFlagTo1IfAdditionResultIsGreaterThan8Bits(t *testing.T) {
 	var ins uint16 = 0x8124
 	var rX uint16 = (ins & 0x0f00) >> 8
 	var rY uint16 = (ins & 0x00f0) >> 4
-	c8 := New(nil)
-	c8.registers[rX] = 250
-	c8.registers[rY] = 10
 
-	c8.exec(ins)
+	vm.registers[rX] = 250
+	vm.registers[rY] = 10
 
-	if c8.registers[0xf] == 0 {
+	vm.exec(ins)
+
+	if vm.registers[0xf] == 0 {
 		t.Fail()
 	}
 }
@@ -205,13 +214,13 @@ func TestSetsCarryFlagTo1IfAdditionResultIsGreaterThan8Bits(t *testing.T) {
 func TestSetsCarryFlagTo1IfRegXGreaterThanRegY(t *testing.T) {
 	var ins uint16 = 0x8125
 	rX, rY := registersXAndYFromIns(ins)
-	c8 := New(nil)
-	c8.registers[rX] = 3
-	c8.registers[rY] = 2
 
-	c8.exec(ins)
+	vm.registers[rX] = 3
+	vm.registers[rY] = 2
 
-	if c8.registers[0xf] == 0 {
+	vm.exec(ins)
+
+	if vm.registers[0xf] == 0 {
 		t.Fail()
 	}
 }
@@ -219,13 +228,13 @@ func TestSetsCarryFlagTo1IfRegXGreaterThanRegY(t *testing.T) {
 func TestRegYIsSubstractedFromRegX(t *testing.T) {
 	var ins uint16 = 0x8125
 	rX, rY := registersXAndYFromIns(ins)
-	c8 := New(nil)
-	c8.registers[rX] = 3
-	c8.registers[rY] = 2
 
-	c8.exec(ins)
+	vm.registers[rX] = 3
+	vm.registers[rY] = 2
 
-	if c8.registers[rX] != 1 {
+	vm.exec(ins)
+
+	if vm.registers[rX] != 1 {
 		t.Fail()
 	}
 }
@@ -233,20 +242,20 @@ func TestRegYIsSubstractedFromRegX(t *testing.T) {
 func TestSetsCarryFlagTo1IfLeastSignifcantBitIs1(t *testing.T) {
 	var ins uint16 = 0x80b6
 	rX, _ := registersXAndYFromIns(ins)
-	c8 := New(nil)
-	c8.registers[rX] = 0x0f
 
-	c8.exec(ins)
+	vm.registers[rX] = 0x0f
 
-	if c8.registers[0xf] != 1 {
+	vm.exec(ins)
+
+	if vm.registers[0xf] != 1 {
 		t.Fail()
 	}
 
-	c8.registers[rX] = 0x0
+	vm.registers[rX] = 0x0
 
-	c8.exec(ins)
+	vm.exec(ins)
 
-	if c8.registers[0xf] != 0 {
+	if vm.registers[0xf] != 0 {
 		t.Fail()
 	}
 
@@ -256,12 +265,12 @@ func TestRegXGetsDividedBy2(t *testing.T) {
 	var ins uint16 = 0x80b6
 	var val uint8 = 6
 	rX, _ := registersXAndYFromIns(ins)
-	c8 := New(nil)
-	c8.registers[rX] = val
 
-	c8.exec(ins)
+	vm.registers[rX] = val
 
-	if c8.registers[rX] != 3 {
+	vm.exec(ins)
+
+	if vm.registers[rX] != 3 {
 		t.Fail()
 	}
 }
@@ -269,13 +278,13 @@ func TestRegXGetsDividedBy2(t *testing.T) {
 func TestSetsCarryFlagTo1IfRegYGreaterThatRegX(t *testing.T) {
 	var ins uint16 = 0x8127
 	rX, rY := registersXAndYFromIns(ins)
-	c8 := New(nil)
-	c8.registers[rX] = 2
-	c8.registers[rY] = 3
 
-	c8.exec(ins)
+	vm.registers[rX] = 2
+	vm.registers[rY] = 3
 
-	if c8.registers[0xf] == 0 {
+	vm.exec(ins)
+
+	if vm.registers[0xf] == 0 {
 		t.Fail()
 	}
 }
@@ -283,13 +292,13 @@ func TestSetsCarryFlagTo1IfRegYGreaterThatRegX(t *testing.T) {
 func TestRegXIsSubtractedFromRegYAndStoredInRegX(t *testing.T) {
 	var ins uint16 = 0x8127
 	rX, rY := registersXAndYFromIns(ins)
-	c8 := New(nil)
-	c8.registers[rX] = 2
-	c8.registers[rY] = 3
 
-	c8.exec(ins)
+	vm.registers[rX] = 2
+	vm.registers[rY] = 3
 
-	if c8.registers[rX] != 1 {
+	vm.exec(ins)
+
+	if vm.registers[rX] != 1 {
 		t.Fail()
 	}
 }
@@ -297,12 +306,12 @@ func TestRegXIsSubtractedFromRegYAndStoredInRegX(t *testing.T) {
 func TestSetsCarryFlagTo1IfMostSignificantBitOfRegXIs1(t *testing.T) {
 	var ins uint16 = 0x812e
 	rX, _ := registersXAndYFromIns(ins)
-	c8 := New(nil)
-	c8.registers[rX] = 128 // 10000000
 
-	c8.exec(ins)
+	vm.registers[rX] = 128 // 10000000
 
-	if c8.registers[0xf] != 1 {
+	vm.exec(ins)
+
+	if vm.registers[0xf] != 1 {
 		t.Fail()
 	}
 }
@@ -310,12 +319,12 @@ func TestSetsCarryFlagTo1IfMostSignificantBitOfRegXIs1(t *testing.T) {
 func TestRegXGetsMultipliedByTwo(t *testing.T) {
 	var ins uint16 = 0x812e
 	rX, _ := registersXAndYFromIns(ins)
-	c8 := New(nil)
-	c8.registers[rX] = 2
 
-	c8.exec(ins)
+	vm.registers[rX] = 2
 
-	if c8.registers[rX] != 4 {
+	vm.exec(ins)
+
+	if vm.registers[rX] != 4 {
 		t.Fail()
 	}
 }
@@ -323,14 +332,14 @@ func TestRegXGetsMultipliedByTwo(t *testing.T) {
 func TestSkipsNextInsIfRegXAndRegYAreEqual(t *testing.T) {
 	var ins uint16 = 0x9120
 	rX, rY := registersXAndYFromIns(ins)
-	c8 := New(nil)
-	initialPc := c8.pc
-	c8.registers[rX] = 1
-	c8.registers[rY] = 0
 
-	c8.exec(ins)
+	initialPc := vm.pc
+	vm.registers[rX] = 1
+	vm.registers[rY] = 0
 
-	if !hasSkipped(initialPc, c8.pc) {
+	vm.exec(ins)
+
+	if !hasSkipped(initialPc, vm.pc) {
 		t.Fail()
 	}
 }
@@ -338,11 +347,10 @@ func TestSkipsNextInsIfRegXAndRegYAreEqual(t *testing.T) {
 func TestSetsRegIToNNN(t *testing.T) {
 	var ins uint16 = 0xa2f0
 	var nnn uint16 = ins & 0x0fff
-	c8 := New(nil)
 
-	c8.exec(ins)
+	vm.exec(ins)
 
-	if c8.ir != nnn {
+	if vm.ir != nnn {
 		t.Fail()
 	}
 }
@@ -350,12 +358,12 @@ func TestSetsRegIToNNN(t *testing.T) {
 func TestJumpsToLocationNNNAndAddsRegister0(t *testing.T) {
 	var ins uint16 = 0xb2f0
 	var nnn uint16 = ins & 0x0fff
-	c8 := New(nil)
-	c8.registers[0] = 1
 
-	c8.exec(ins)
+	vm.registers[0] = 1
 
-	if c8.pc != (uint16(c8.registers[0]) + nnn) {
+	vm.exec(ins)
+
+	if vm.pc != (uint16(vm.registers[0]) + nnn) {
 		t.Fail()
 	}
 }
@@ -363,12 +371,12 @@ func TestJumpsToLocationNNNAndAddsRegister0(t *testing.T) {
 func TestSetsRegXToRandomgByte(t *testing.T) {
 	var ins uint16 = 0xc717
 	rX, _ := registersXAndYFromIns(ins)
-	c8 := New(nil)
-	c8.registers[rX] = 1
 
-	c8.exec(ins)
+	vm.registers[rX] = 1
 
-	if c8.registers[rX] == 1 {
+	vm.exec(ins)
+
+	if vm.registers[rX] == 1 {
 		t.Fail()
 	}
 }
