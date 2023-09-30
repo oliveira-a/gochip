@@ -33,13 +33,13 @@ func TestFontIsLoadedToCorrectMemorySpace(t *testing.T) {
 func TestClearsDisplay(t *testing.T) {
 	var ins uint16 = 0x00E0
 	c8 := New(nil)
-	c8.display[Rows/2][Rows/2] = 1
+	c8.vram[Rows/2][Rows/2] = 1
 
 	c8.exec(ins)
 
 	for y := 0; y < Rows; y++ {
 		for x := 0; x < Cols; x++ {
-			if c8.display[x][y] != 0 {
+			if c8.vram[x][y] != 0 {
 				t.Fail()
 			}
 		}
