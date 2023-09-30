@@ -26,7 +26,7 @@ func main() {
 		panic(err)
 	}
 
-	c8 := chip8.New(nil)
+	c8 := chip8.New()
 	if err = c8.LoadRom(b); err != nil {
 		panic(err)
 	}
