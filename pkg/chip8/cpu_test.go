@@ -438,6 +438,87 @@ func TestSetsSoundTimerToTheValueOfVx(t *testing.T) {
 	}
 }
 
+func TestIRegistersGetVXAddedToItAndCarries(t *testing.T) {
+	var ins uint16 = 0xf21e
+	var x, _ = registersXAndYFromIns(ins)
+	expected := 0xfff + 1
+	vm.registers[x] = 1
+	vm.ir = 0xfff
+
+	vm.exec(ins)
+
+	if vm.ir != uint16(expected) {
+		t.Fail()
+	}
+
+	if vm.registers[0xf] != 1 {
+		t.Fail()
+	}
+}
+
+func TestSetsFontCharacter(t *testing.T) {
+	var ins uint16 = 0xf029
+	var x, _ = registersXAndYFromIns(ins)
+	var expected uint8 = 5
+	vm.registers[x] = 1
+
+	vm.exec(ins)
+
+	if vm.ir != uint16(expected) {
+		t.Fail()
+	}
+}
+
+func TestStoresBCDRepresentationofRegX(t *testing.T) {
+	var ins uint16 = 0xf033
+	var x, _ = registersXAndYFromIns(ins)
+	vm.registers[x] = 128
+
+	vm.exec(ins)
+
+	if vm.memory[vm.ir] != 1 {
+		t.Fail()
+	}
+	if vm.memory[vm.ir+1] != 2 {
+		t.Fail()
+	}
+	if vm.memory[vm.ir+2] != 8 {
+		t.Fail()
+	}
+}
+
+func TestStoresRegistersFromV0ToVxInMemory(t *testing.T) {
+	var ins uint16 = 0xf255
+	var x, _ = registersXAndYFromIns(ins)
+	vm.registers[0] = 1
+	vm.registers[1] = 2
+	vm.registers[2] = 3
+
+	vm.exec(ins)
+
+	for i := 0; i <= int(x); i++ {
+		if vm.memory[vm.ir+uint16(i)] != uint8(i)+1 {
+			t.Fail()
+		}
+	}
+}
+
+func TestLoadsFromMemoryIntoRegisters(t *testing.T) {
+	var ins uint16 = 0xf265
+	var x, _ = registersXAndYFromIns(ins)
+	vm.memory[vm.ir] = 1
+	vm.memory[vm.ir+1] = 2
+	vm.memory[vm.ir+2] = 3
+
+	vm.exec(ins)
+
+	for i := 0; i <= int(x); i++ {
+		if vm.registers[uint16(i)] != uint8(i)+1 {
+			t.Fail()
+		}
+	}
+}
+
 func registersXAndYFromIns(ins uint16) (uint16, uint16) {
 	return ((ins & 0x0f00) >> 8), ((ins & 0x00f0) >> 4)
 }

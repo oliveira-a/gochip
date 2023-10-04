@@ -336,22 +336,52 @@ func (vm *VM) exec(ins uint16) error {
 			break
 		case 0x1e:
 			logInstruction(ins, "Set I = I + vX.")
+			vm.ir += uint16(vm.registers[vX])
+			if vm.ir > 0xfff {
+				vm.registers[0xf] = 1
+			}
 			vm.pc += 2
 			break
 		case 0x29:
+			// Find the character in the font map
+			// Set the ir to point to the right
+			// address memory which corresponds to
+			// the character in register x. Each
+			// character is at 5 apart.
 			logInstruction(ins, "Set I = location of sprite for digit vX.")
+			p := 0
+			for i := 0; i < int(vm.registers[vX]); i++ {
+				p += 5
+			}
+			vm.ir = uint16(p)
 			vm.pc += 2
 			break
 		case 0x33:
 			logInstruction(ins, "Store BCD representation of vX in memory location I, I+1, and I+2")
+			// 128
+			v := vm.registers[vX]
+
+			//         1                  2                 8
+			b, c, d := uint8((v/100)%10), uint8((v/10)%10), uint8((v/1)%10)
+
+			vm.memory[vm.ir] = b
+			vm.memory[vm.ir+1] = c
+			vm.memory[vm.ir+2] = d
+
 			vm.pc += 2
 			break
 		case 0x55:
 			logInstruction(ins, "Store registers v0 through vX in memory locations I.")
+			for r := 0; r <= int(vX); r++ {
+				vm.memory[vm.ir+uint16(r)] = vm.registers[r]
+			}
 			vm.pc += 2
 			break
 		case 0x65:
 			logInstruction(ins, "Read registers v0 through vX from memory starting at location I.")
+			for i := 0; i <= int(vX); i++ {
+				vm.registers[i] = vm.memory[vm.ir+uint16(i)]
+			}
 			vm.pc += 2
 			break
 		}
