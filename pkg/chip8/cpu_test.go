@@ -399,6 +399,45 @@ func TestWaitsForKeyInput(t *testing.T) {
 	}
 }
 
+func TestSetsRegisterXToDelayTimerValue(t *testing.T) {
+	var ins uint16 = 0xf207
+	x, _ := registersXAndYFromIns(ins)
+	var expected uint16 = 0x6
+	vm.dt = expected
+
+	vm.exec(ins)
+
+	if vm.registers[x] != uint8(expected) {
+		t.Fail()
+	}
+}
+
+func TestSetsDelayTimerToTheValueOfVx(t *testing.T) {
+	var ins uint16 = 0xf215
+	x, _ := registersXAndYFromIns(ins)
+	var expected uint8 = 0x6
+	vm.registers[x] = expected
+
+	vm.exec(ins)
+
+	if vm.dt != uint16(expected) {
+		t.Fail()
+	}
+}
+
+func TestSetsSoundTimerToTheValueOfVx(t *testing.T) {
+	var ins uint16 = 0xf218
+	x, _ := registersXAndYFromIns(ins)
+	var expected uint8 = 0x1
+	vm.registers[x] = expected
+
+	vm.exec(ins)
+
+	if vm.st != uint16(expected) {
+		t.Fail()
+	}
+}
+
 func registersXAndYFromIns(ins uint16) (uint16, uint16) {
 	return ((ins & 0x0f00) >> 8), ((ins & 0x00f0) >> 4)
 }

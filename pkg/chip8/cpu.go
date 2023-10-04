@@ -310,7 +310,7 @@ func (vm *VM) exec(ins uint16) error {
 		switch nn {
 		case 0x7:
 			logInstruction(ins, "Set vX = delay timer value.")
-			vm.memory[vX] = uint8(vm.dt)
+			vm.registers[vX] = uint8(vm.dt)
 			vm.pc += 2
 			break
 		case 0xa:
@@ -326,10 +326,12 @@ func (vm *VM) exec(ins uint16) error {
 			break
 		case 0x15:
 			logInstruction(ins, "Set the delay timer to vX.")
+			vm.dt = uint16(vm.registers[vX])
 			vm.pc += 2
 			break
 		case 0x18:
 			logInstruction(ins, "Set sound timer = vX.")
+			vm.st = uint16(vm.registers[vX])
 			vm.pc += 2
 			break
 		case 0x1e:
