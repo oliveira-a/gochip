@@ -6,13 +6,19 @@ import (
 )
 
 var vm *VM
+var quit chan uint8
 
 func setup() {
-	vm = New()
+	vm = New(quit)
+}
+
+func teardown() {
+	quit <- 1
 }
 
 func TestMain(m *testing.M) {
 	setup()
+	defer teardown()
 	code := m.Run()
 	os.Exit(code)
 }
@@ -85,10 +91,10 @@ func TestSkipsNextInsIfNNIsEqualToRegisterX(t *testing.T) {
 
 func TestSkipsNextInsIfRegXNotEqualsNN(t *testing.T) {
 	var ins uint16 = 0x463f
-	var reg uint16 = (ins & 0x0f00) >> 8
+	x, _ := registersXAndYFromIns(ins)
 
 	initialPc := vm.pc
-	vm.registers[reg] = 0x0012 // random value
+	vm.registers[x] = 0x0012 // random value
 
 	vm.exec(ins)
 
@@ -377,6 +383,18 @@ func TestSetsRegXToRandomgByte(t *testing.T) {
 	vm.exec(ins)
 
 	if vm.registers[rX] == 1 {
+		t.Fail()
+	}
+}
+
+func TestWaitsForKeyInput(t *testing.T) {
+	var ins uint16 = 0xf20a
+	x, _ := registersXAndYFromIns(ins)
+	vm.keys[4] = 1
+
+	vm.exec(ins)
+
+	if vm.registers[x] != 4 {
 		t.Fail()
 	}
 }

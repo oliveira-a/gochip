@@ -22,7 +22,12 @@ type VM struct {
 	memory    [4096]uint8
 	registers [16]uint8
 	stack     [16]uint16
-	keys      [8]uint8
+
+	keys [16]uint8
+
+	ticker *time.Ticker
+
+	quit chan bool
 
 	// The program counter.
 	pc uint16
@@ -40,14 +45,13 @@ type VM struct {
 	st uint16
 }
 
-func New() *VM {
-	// TODO: Perhaps move this to the constructor
-	// injected. Maybe the whole logger instance?
+func New(quit chan uint8) *VM {
 	log.SetPrefix("CHIP-8: ")
 	log.SetFlags(log.Ltime)
 
 	cpu := &VM{
-		pc: 0x200,
+		ticker: time.NewTicker(time.Second / time.Duration(60)),
+		pc:     0x200,
 	}
 
 	for i := 0; i < len(font); i++ {
@@ -69,14 +73,23 @@ func (c *VM) LoadRom(b []byte) error {
 	return nil
 }
 
-func (vm *VM) Run() error {
-	var ins uint16 = uint16(vm.memory[vm.pc])<<8 | uint16(vm.memory[vm.pc+1])
-
-	if err := vm.exec(ins); err != nil {
-		return err
+func (vm *VM) Run() {
+	for {
+		select {
+		case <-vm.ticker.C:
+			vm.cycle()
+		case <-vm.quit:
+			return
+		}
 	}
+}
 
-	return nil
+func (vm *VM) cycle() {
+	vm.exec(vm.fetchInstruction())
+}
+
+func (vm *VM) fetchInstruction() uint16 {
+	return uint16(vm.memory[vm.pc])<<8 | uint16(vm.memory[vm.pc+1])
 }
 
 func (vm *VM) exec(ins uint16) error {
@@ -126,11 +139,11 @@ func (vm *VM) exec(ins uint16) error {
 		}
 		break
 	case 0x4000:
-		logInstruction(ins, "Skip the next instrunction if vX != vY.")
+		logInstruction(ins, "Skip the next instrunction if vX != nn.")
 		if uint16(vm.registers[vX]) != nn {
-			vm.pc += 2
-		} else {
 			vm.pc += 4
+		} else {
+			vm.pc += 2
 		}
 		break
 	case 0x5000:
@@ -277,30 +290,39 @@ func (vm *VM) exec(ins uint16) error {
 		switch nn {
 		case 0x9e:
 			logInstruction(ins, "Skip next instrunction if key with value of vX is pressed.")
-			// TODO
-			if vm.keys[uint16(vm.registers[vX])] == Pressed {
+			if vm.keys[vm.registers[vX]] == 1 {
 				vm.pc += 4
 			} else {
 				vm.pc += 2
 			}
 			break
 		case 0xa1:
-			logInstruction(ins, "Skip next instrunction if key with value of vX is no pressed.")
-			// TODO
-			vm.pc += 2
+			logInstruction(ins, "Skip next instrunction if key with value of vX is not pressed.")
+			if vm.keys[vm.registers[vX]] == 0 {
+				vm.pc += 4
+			} else {
+				vm.pc += 2
+			}
 			break
 		}
 		break
 	case 0xf000:
 		switch nn {
-		case 0x07:
+		case 0x7:
 			logInstruction(ins, "Set vX = delay timer value.")
 			vm.memory[vX] = uint8(vm.dt)
 			vm.pc += 2
 			break
-		case 0x0a:
+		case 0xa:
 			logInstruction(ins, "Wait for a key press. Store the value of the key in vX.")
-			vm.pc += 2
+			for i, k := range vm.keys {
+				if k == 1 {
+					vm.registers[vX] = uint8(i)
+					vm.keys[i] = 0
+					vm.pc += 2
+					break
+				}
+			}
 			break
 		case 0x15:
 			logInstruction(ins, "Set the delay timer to vX.")
