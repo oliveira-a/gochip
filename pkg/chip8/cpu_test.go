@@ -9,7 +9,7 @@ var vm *VM
 var quit chan uint8
 
 func setup() {
-	vm = New(quit)
+	vm = New()
 }
 
 func teardown() {
@@ -49,13 +49,13 @@ func TestFontIsLoadedToCorrectMemorySpace(t *testing.T) {
 func TestClearsDisplay(t *testing.T) {
 	var ins uint16 = 0x00E0
 
-	vm.vram[Rows/2][Rows/2] = 1
+	vm.Vram[Rows/2][Rows/2] = 1
 
 	vm.exec(ins)
 
 	for y := 0; y < Rows; y++ {
 		for x := 0; x < Cols; x++ {
-			if vm.vram[x][y] != 0 {
+			if vm.Vram[x][y] != 0 {
 				t.Fail()
 			}
 		}

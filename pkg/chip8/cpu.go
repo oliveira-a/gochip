@@ -17,7 +17,7 @@ const (
 
 type VM struct {
 	// Display memory
-	vram [Cols][Rows]uint8
+	Vram [Cols][Rows]uint8
 
 	memory    [4096]uint8
 	registers [16]uint8
@@ -27,7 +27,8 @@ type VM struct {
 
 	ticker *time.Ticker
 
-	quit chan bool
+	Quit    chan bool
+	Running bool
 
 	// The program counter.
 	pc uint16
@@ -45,11 +46,12 @@ type VM struct {
 	st uint16
 }
 
-func New(quit chan uint8) *VM {
+func New() *VM {
 	log.SetPrefix("CHIP-8: ")
 	log.SetFlags(log.Ltime)
 
 	cpu := &VM{
+		Quit:   make(chan bool),
 		ticker: time.NewTicker(time.Second / time.Duration(60)),
 		pc:     0x200,
 	}
@@ -74,11 +76,13 @@ func (c *VM) LoadRom(b []byte) error {
 }
 
 func (vm *VM) Run() {
+	vm.Running = true
 	for {
 		select {
 		case <-vm.ticker.C:
 			vm.cycle()
-		case <-vm.quit:
+		case <-vm.Quit:
+			vm.Running = false
 			return
 		}
 	}
@@ -109,7 +113,7 @@ func (vm *VM) exec(ins uint16) error {
 			logInstruction(ins, "Clear the display.")
 			for y := 0; y < Rows; y++ {
 				for x := 0; x < Cols; x++ {
-					vm.vram[x][y] = 0
+					vm.Vram[x][y] = 0
 				}
 			}
 			vm.pc += 2
@@ -155,7 +159,7 @@ func (vm *VM) exec(ins uint16) error {
 		}
 		break
 	case 0x6000:
-		logInstruction(ins, "Skip the next instrunction if vX = vY.")
+		logInstruction(ins, "Load value nn into vX.")
 		vm.registers[vX] = uint8(nn)
 		vm.pc += 2
 		break
@@ -264,26 +268,26 @@ func (vm *VM) exec(ins uint16) error {
 		break
 	case 0xd000:
 		logInstruction(ins, "Draw.")
-		// Draw the sprite starting at memory location I.
+
 		vm.registers[0xf] = 0
 		height := n
-		width := 8
 
 		for i := 0; i < int(height); i++ {
 			sprite := vm.memory[vm.ir+uint16(i)]
-			for bit := 0; bit < width; bit++ {
-				draw := (sprite >> bit) % 2
+
+			for bit := 0; bit < 8; bit++ {
+				draw := (sprite >> (8 - (bit + 1))) % 2
 				x, y := (vm.registers[vX]+uint8(bit))%Cols, (vm.registers[vY]+uint8(i))%Rows
 
-				isDraw := vm.vram[x][y] ^ draw
-				vm.vram[x][y] = isDraw
+				vm.Vram[x][y] ^= draw
 
 				// If any bit got erased, then set vF to carry.
-				if isDraw == 0 {
+				if vm.Vram[x][y] == 0 {
 					vm.registers[0xf] = 1
 				}
 			}
 		}
+
 		vm.pc += 2
 		break
 	case 0xe000:
