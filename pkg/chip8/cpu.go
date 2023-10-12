@@ -16,19 +16,15 @@ const (
 )
 
 type VM struct {
-	// Display memory
 	Vram [Cols][Rows]uint8
 
 	memory    [4096]uint8
 	registers [16]uint8
 	stack     [16]uint16
 
-	keys [16]uint8
+	Keys [16]uint8
 
-	ticker *time.Ticker
-
-	Quit    chan bool
-	Running bool
+	beep func()
 
 	// The program counter.
 	pc uint16
@@ -37,23 +33,22 @@ type VM struct {
 	ir uint16
 
 	// The stack pointer.
-	sp uint16
+	sp uint8
 
 	// The delay timer.
-	dt uint16
+	dt uint8
 
 	// The sound timer.
-	st uint16
+	st uint8
 }
 
-func New() *VM {
+func New(beep func()) *VM {
 	log.SetPrefix("CHIP-8: ")
 	log.SetFlags(log.Ltime)
 
 	cpu := &VM{
-		Quit:   make(chan bool),
-		ticker: time.NewTicker(time.Second / time.Duration(60)),
-		pc:     0x200,
+		pc:   0x200,
+		beep: beep,
 	}
 
 	for i := 0; i < len(font); i++ {
@@ -75,21 +70,17 @@ func (c *VM) LoadRom(b []byte) error {
 	return nil
 }
 
-func (vm *VM) Run() {
-	vm.Running = true
-	for {
-		select {
-		case <-vm.ticker.C:
-			vm.cycle()
-		case <-vm.Quit:
-			vm.Running = false
-			return
-		}
-	}
-}
-
-func (vm *VM) cycle() {
+func (vm *VM) Cycle() {
 	vm.exec(vm.fetchInstruction())
+
+	if vm.dt > 0 {
+		vm.dt--
+	}
+
+	if vm.st > 0 {
+		vm.beep()
+		vm.st--
+	}
 }
 
 func (vm *VM) fetchInstruction() uint16 {
@@ -287,14 +278,13 @@ func (vm *VM) exec(ins uint16) error {
 				}
 			}
 		}
-
 		vm.pc += 2
 		break
 	case 0xe000:
 		switch nn {
 		case 0x9e:
 			logInstruction(ins, "Skip next instrunction if key with value of vX is pressed.")
-			if vm.keys[vm.registers[vX]] == 1 {
+			if vm.Keys[vm.registers[vX]] == 1 {
 				vm.pc += 4
 			} else {
 				vm.pc += 2
@@ -302,7 +292,7 @@ func (vm *VM) exec(ins uint16) error {
 			break
 		case 0xa1:
 			logInstruction(ins, "Skip next instrunction if key with value of vX is not pressed.")
-			if vm.keys[vm.registers[vX]] == 0 {
+			if vm.Keys[vm.registers[vX]] == 0 {
 				vm.pc += 4
 			} else {
 				vm.pc += 2
@@ -319,10 +309,10 @@ func (vm *VM) exec(ins uint16) error {
 			break
 		case 0xa:
 			logInstruction(ins, "Wait for a key press. Store the value of the key in vX.")
-			for i, k := range vm.keys {
+			for i, k := range vm.Keys {
 				if k == 1 {
 					vm.registers[vX] = uint8(i)
-					vm.keys[i] = 0
+					vm.Keys[i] = 0
 					vm.pc += 2
 					break
 				}
@@ -330,12 +320,12 @@ func (vm *VM) exec(ins uint16) error {
 			break
 		case 0x15:
 			logInstruction(ins, "Set the delay timer to vX.")
-			vm.dt = uint16(vm.registers[vX])
+			vm.dt = vm.registers[vX]
 			vm.pc += 2
 			break
 		case 0x18:
 			logInstruction(ins, "Set sound timer = vX.")
-			vm.st = uint16(vm.registers[vX])
+			vm.st = vm.registers[vX]
 			vm.pc += 2
 			break
 		case 0x1e:
