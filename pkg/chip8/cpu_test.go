@@ -9,7 +9,7 @@ var vm *VM
 var quit chan uint8
 
 func setup() {
-	vm = New()
+	vm = New(nil)
 }
 
 func teardown() {
@@ -66,11 +66,11 @@ func TestReturnsFromASubroutine(t *testing.T) {
 	var ins uint16 = 0x00EE
 	var addr uint16 = 1
 
-	vm.sp = addr
+	vm.sp = uint8(addr)
 
 	vm.exec(ins)
 
-	if vm.pc != addr && vm.sp != addr-1 {
+	if vm.pc != addr && vm.sp != uint8(addr)-1 {
 		t.Fail()
 	}
 }
@@ -390,7 +390,7 @@ func TestSetsRegXToRandomgByte(t *testing.T) {
 func TestWaitsForKeyInput(t *testing.T) {
 	var ins uint16 = 0xf20a
 	x, _ := registersXAndYFromIns(ins)
-	vm.keys[4] = 1
+	vm.Keys[4] = 1
 
 	vm.exec(ins)
 
@@ -403,7 +403,7 @@ func TestSetsRegisterXToDelayTimerValue(t *testing.T) {
 	var ins uint16 = 0xf207
 	x, _ := registersXAndYFromIns(ins)
 	var expected uint16 = 0x6
-	vm.dt = expected
+	vm.dt = uint8(expected)
 
 	vm.exec(ins)
 
@@ -420,7 +420,7 @@ func TestSetsDelayTimerToTheValueOfVx(t *testing.T) {
 
 	vm.exec(ins)
 
-	if vm.dt != uint16(expected) {
+	if vm.dt != expected {
 		t.Fail()
 	}
 }
@@ -433,7 +433,7 @@ func TestSetsSoundTimerToTheValueOfVx(t *testing.T) {
 
 	vm.exec(ins)
 
-	if vm.st != uint16(expected) {
+	if vm.st != expected {
 		t.Fail()
 	}
 }
