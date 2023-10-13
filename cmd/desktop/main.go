@@ -5,6 +5,8 @@ import (
 	"image/color"
 	"log"
 	"os"
+	"path"
+	"runtime"
 	"time"
 
 	"github.com/faiface/beep/mp3"
@@ -63,14 +65,17 @@ func main() {
 }
 
 func listenForAudio() {
-	f, err := os.Open("beep.mp3")
+	_, p, _, _ := runtime.Caller(0)
+	p = path.Dir(p)
+
+	f, err := os.Open(fmt.Sprintf("%s/beep.mp3", p))
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	s, format, err := mp3.Decode(f)
 	if err != nil {
-		return
+		panic(err)
 	}
 	defer s.Close()
 
