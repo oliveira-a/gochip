@@ -24,7 +24,9 @@ type VM struct {
 
 	Keys [16]uint8
 
-	beep func()
+	// To be provided by the client.
+	// The vm will use this channel to notify when to beep.
+	audio chan int
 
 	// The program counter.
 	pc uint16
@@ -42,13 +44,15 @@ type VM struct {
 	st uint8
 }
 
-func New(beep func()) *VM {
+func init() {
 	log.SetPrefix("CHIP-8: ")
 	log.SetFlags(log.Ltime)
+}
 
+func New(audio chan int) *VM {
 	cpu := &VM{
-		pc:   0x200,
-		beep: beep,
+		pc:    0x200,
+		audio: audio,
 	}
 
 	for i := 0; i < len(font); i++ {
@@ -78,7 +82,7 @@ func (vm *VM) Cycle() {
 	}
 
 	if vm.st > 0 {
-		vm.beep()
+		vm.audio <- 1
 		vm.st--
 	}
 }
@@ -411,5 +415,5 @@ func nnn(ins uint16) uint16 {
 }
 
 func logInstruction(ins uint16, msg string) {
-	log.Printf("| Executing '%04x': %s\n", ins, msg)
+	//log.Printf("| Executing '%04x': %s\n", ins, msg)
 }

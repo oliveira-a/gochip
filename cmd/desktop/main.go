@@ -5,25 +5,29 @@ import (
 	"image/color"
 	"log"
 	"os"
+	"time"
 
+	"github.com/faiface/beep/mp3"
+	"github.com/faiface/beep/speaker"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/oliveira-a/gochip/pkg/chip8"
 )
 
 var (
-	c8     *chip8.VM
-	square *ebiten.Image
-	game   *Game
+	c8       *chip8.VM
+	square   *ebiten.Image
+	game     *Game
+	beepChan chan int
 )
 
 func init() {
 	square = ebiten.NewImage(20, 20)
 	square.Fill(color.RGBA{R: 255, G: 140, B: 0, A: 1})
 
-	c8 = chip8.New(func() {
+	beepChan = make(chan int)
 
-	})
+	c8 = chip8.New(beepChan)
 
 	game = &Game{}
 	ebiten.SetWindowSize((640 * 2), (320 * 2))
@@ -51,8 +55,33 @@ func main() {
 		panic(err)
 	}
 
+	go listenForAudio()
+
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func listenForAudio() {
+	f, err := os.Open("beep.mp3")
+	if err != nil {
+		return
+	}
+
+	s, format, err := mp3.Decode(f)
+	if err != nil {
+		return
+	}
+	defer s.Close()
+
+	speaker.Init(
+		format.SampleRate,
+		format.SampleRate.N(time.Second/10),
+	)
+
+	for {
+		<-beepChan
+		speaker.Play(s)
 	}
 }
 
@@ -68,6 +97,8 @@ func btoi(b bool) uint8 {
 }
 
 func (g *Game) Update() error {
+	c8.Cycle()
+
 	c8.Keys[0x1] = uint8(btoi(ebiten.IsKeyPressed(ebiten.Key1)))
 	c8.Keys[0x2] = uint8(btoi(ebiten.IsKeyPressed(ebiten.Key2)))
 	c8.Keys[0x3] = uint8(btoi(ebiten.IsKeyPressed(ebiten.Key3)))
