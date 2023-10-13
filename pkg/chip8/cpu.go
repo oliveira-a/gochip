@@ -415,5 +415,5 @@ func nnn(ins uint16) uint16 {
 }
 
 func logInstruction(ins uint16, msg string) {
-	//log.Printf("| Executing '%04x': %s\n", ins, msg)
+	log.Printf("| Executing '%04x': %s\n", ins, msg)
 }
