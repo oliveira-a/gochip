@@ -33,6 +33,7 @@ func init() {
 
 	game = &Game{}
 	ebiten.SetWindowSize((640 * 2), (320 * 2))
+	ebiten.SetMaxTPS(120)
 }
 
 func main() {
