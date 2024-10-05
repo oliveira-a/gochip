@@ -36,6 +36,12 @@ func init() {
 }
 
 func main() {
+	if len(os.Args) == 1 {
+		fmt.Println("Please specify a path to a rom.")
+
+		return
+	}
+
 	rom, err := os.Open(os.Args[1])
 	if err != nil {
 		panic(err)
