@@ -1,9 +1,8 @@
 package main
 
 import (
-	_ "fmt"
-	"time"
 	"syscall/js"
+	"time"
 
 	"github.com/oliveira-a/gochip/pkg/chip8"
 )
@@ -12,7 +11,7 @@ var (
 	c8       *chip8.VM
 	beepChan chan int
 
-	posX, posY    float64
+	posX, posY float64
 
 	canvasWidth  = 640
 	canvasHeight = 320
@@ -29,10 +28,14 @@ func init() {
 	doc.Call(
 		"addEventListener",
 		"keydown",
-		js.FuncOf(keyListener),
+		js.FuncOf(keyDownListener),
+	)
+	doc.Call(
+		"addEventListener",
+		"keyup",
+		js.FuncOf(keyUpListener),
 	)
 
-	
 	// Setup the canvas
 	canvas = doc.Call("getElementById", "gameCanvas")
 	canvas.Set("width", canvasWidth)
@@ -40,25 +43,24 @@ func init() {
 
 	// File loading setup
 	fileInput := doc.Call("getElementById", "fileInput")
-    fileInput.Set("oninput", js.FuncOf(func(v js.Value, x []js.Value) any {
-        fileInput.Get("files").Call("item", 0).Call("arrayBuffer").Call("then", js.FuncOf(func(v js.Value, x []js.Value) any {
-            data := js.Global().Get("Uint8Array").New(x[0])
-            dst := make([]byte, data.Get("length").Int())
-            js.CopyBytesToGo(dst, data)
-			
+	fileInput.Set("oninput", js.FuncOf(func(v js.Value, x []js.Value) any {
+		fileInput.Get("files").Call("item", 0).Call("arrayBuffer").Call("then", js.FuncOf(func(v js.Value, x []js.Value) any {
+			data := js.Global().Get("Uint8Array").New(x[0])
+			dst := make([]byte, data.Get("length").Int())
+			js.CopyBytesToGo(dst, data)
+
 			c8 = chip8.New(beepChan)
 
 			if err := c8.LoadRom(dst); err != nil {
 				panic(err)
 			}
 
-            return nil
-        }))
+			return nil
+		}))
 
-        return nil
-    }))
+		return nil
+	}))
 }
-
 
 func main() {
 	loop()
@@ -84,7 +86,7 @@ func render() {
 	// background
 	ctx.Set("fillStyle", "black")
 	ctx.Call("fillRect", 0, 0, canvasWidth, canvasHeight)
-	
+
 	for x := 0; x < chip8.Cols; x++ {
 		for y := 0; y < chip8.Rows; y++ {
 			if c8.Vram[x][y] == 1 {
@@ -97,25 +99,61 @@ func render() {
 	}
 }
 
-func update(key string) {
-	// TODO: set the positing in chip8
+func update(key string, pressed uint8) {
 	switch key {
-	case "A":
-		posY -= 10
-	case "B":
-		posY += 10
-	case "ArrowLeft":
-		posX -= 10
-	case "ArrowRight":
-		posX += 10
+	case "1":
+		c8.Keys[0x1] = pressed
+	case "2":
+		c8.Keys[0x2] = pressed
+	case "3":
+		c8.Keys[0x3] = pressed
+	case "4":
+		c8.Keys[0xc] = pressed
+
+	case "q":
+		c8.Keys[0x4] = pressed
+	case "w":
+		c8.Keys[0x5] = pressed
+	case "e":
+		c8.Keys[0x6] = pressed
+	case "r":
+		c8.Keys[0xd] = pressed
+
+	case "a":
+		c8.Keys[0x7] = pressed
+	case "s":
+		c8.Keys[0x8] = pressed
+	case "d":
+		c8.Keys[0x9] = pressed
+	case "f":
+		c8.Keys[0xe] = pressed
+
+	case "z":
+		c8.Keys[0xa] = pressed
+	case "x":
+		c8.Keys[0x0] = pressed
+	case "c":
+		c8.Keys[0xb] = pressed
+	case "v":
+		c8.Keys[0xd] = pressed
 	}
 }
 
-func keyListener(this js.Value, p []js.Value) interface{} {
+func keyDownListener(this js.Value, p []js.Value) interface{} {
 	event := p[0]
 	key := event.Get("key").String()
 
-	update(key)
+	update(key, uint8(1))
 
 	return nil
 }
+
+func keyUpListener(this js.Value, p []js.Value) interface{} {
+	event := p[0]
+	key := event.Get("key").String()
+
+	update(key, uint8(0))
+
+	return nil
+}
+
