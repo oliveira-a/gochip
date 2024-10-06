@@ -7,7 +7,7 @@ import (
 
 func main() {
 	// Serve files from the current directory
-	fs := http.FileServer(http.Dir("."))
+	fs := http.FileServer(http.Dir("./server"))
 
 	http.Handle("/", fs)
 
