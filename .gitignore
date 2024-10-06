@@ -22,3 +22,6 @@ go.work
 
 .vscode
 .DS_Store
+
+server
+gochip
