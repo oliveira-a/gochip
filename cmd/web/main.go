@@ -9,7 +9,6 @@ import (
 
 var (
 	c8       *chip8.VM
-	beepChan chan int
 
 	canvasWidth  = 640
 	canvasHeight = 320
@@ -19,8 +18,7 @@ var (
 
 func init() {
 	// Setup the virtual machine
-	beepChan = make(chan int)
-	c8 = chip8.New(beepChan)
+	c8 = chip8.New(make(chan int))
 
 	doc := js.Global().Get("document")
 	doc.Call(
@@ -47,7 +45,7 @@ func init() {
 			dst := make([]byte, data.Get("length").Int())
 			js.CopyBytesToGo(dst, data)
 
-			c8 = chip8.New(beepChan)
+			c8 = chip8.New(make(chan int))
 
 			if err := c8.LoadRom(dst); err != nil {
 				panic(err)
@@ -67,7 +65,7 @@ func main() {
 }
 
 func loop() {
-	tick := time.Tick(16 * time.Millisecond)
+	tick := time.Tick(8 * time.Millisecond)
 	for {
 		select {
 		case <-tick:
