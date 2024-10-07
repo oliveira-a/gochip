@@ -11,8 +11,6 @@ var (
 	c8       *chip8.VM
 	beepChan chan int
 
-	posX, posY float64
-
 	canvasWidth  = 640
 	canvasHeight = 320
 
@@ -156,4 +154,3 @@ func keyUpListener(this js.Value, p []js.Value) interface{} {
 
 	return nil
 }
-
