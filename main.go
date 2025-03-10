@@ -31,7 +31,7 @@ var (
 	//go:embed static/roms/*.ch8
 	roms embed.FS
 
-	//go:embed beep.mp3
+	//go:embed static/beep.mp3
 	beepMp3 []byte
 
 	backgroundColor color.Color = color.Black
