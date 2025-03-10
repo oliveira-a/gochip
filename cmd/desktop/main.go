@@ -28,6 +28,9 @@ var (
 	square   *ebiten.Image
 	game     *Game
 	beepChan chan int
+
+	backgroundColor color.Color = color.RGBA{R: 0, G: 0, B: 0, A: 0}
+	tileColor color.Color = color.RGBA{R: 255, G: 128, B: 0, A: 1}
 )
 
 type Game struct {
@@ -36,7 +39,7 @@ type Game struct {
 
 func init() {
 	square = ebiten.NewImage(20, 20)
-	square.Fill(color.RGBA{R: 56, G: 104, B: 55, A: 1})
+	square.Fill(tileColor)
 
 	beepChan = make(chan int)
 
@@ -192,7 +195,7 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("FPS: %f", ebiten.ActualFPS()), 0, 0)
 
-	screen.Fill(color.RGBA{R: 200, G: 230, B: 142, A: 255})
+	screen.Fill(backgroundColor)
 
 	for x := 0; x < chip8.Cols; x++ {
 		for y := 0; y < chip8.Rows; y++ {
