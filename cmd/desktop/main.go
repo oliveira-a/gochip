@@ -2,14 +2,11 @@ package main
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"image/color"
 	"log"
-	"os"
-	"path"
-	"runtime"
 	"time"
-	"embed"
 
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
@@ -17,6 +14,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"golang.org/x/image/font/gofont/goregular"
 
+	// todo: move this to the new library: github.com/faiface/beep/mp3
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -33,8 +31,11 @@ var (
 	//go:embed static/roms/*.ch8
 	roms embed.FS
 
+	//go:embed beep.mp3
+	beepMp3 []byte
+
 	backgroundColor color.Color = color.Black
-	tileColor color.Color = color.White
+	tileColor       color.Color = color.White
 )
 
 type Game struct {
@@ -118,16 +119,21 @@ func main() {
 	}
 }
 
+// Used for the embedded mp3 beep audio.
+// 'mp3' requires an implementation of
+// `io.ReadCloser` and a `Close()` method
+// is needed.
+type BytesReadCloser struct {
+	*bytes.Reader
+}
+
+func (b *BytesReadCloser) Close() error {
+	return nil
+}
+
 func listenForAudio() {
-	_, p, _, _ := runtime.Caller(0)
-	p = path.Dir(p)
-
-	f, err := os.Open(fmt.Sprintf("%s/beep.mp3", p))
-	if err != nil {
-		panic(err)
-	}
-
-	s, format, err := mp3.Decode(f)
+	b := &BytesReadCloser{Reader: bytes.NewReader(beepMp3)}
+	s, format, err := mp3.Decode(b)
 	if err != nil {
 		panic(err)
 	}
