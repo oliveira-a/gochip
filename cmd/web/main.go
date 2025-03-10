@@ -4,11 +4,11 @@ import (
 	"syscall/js"
 	"time"
 
-	"github.com/oliveira-a/gochip/pkg/chip8"
+	"github.com/oliveira-a/gochip/chip8"
 )
 
 var (
-	c8       *chip8.VM
+	c8 *chip8.VM
 
 	canvasWidth  = 640
 	canvasHeight = 320

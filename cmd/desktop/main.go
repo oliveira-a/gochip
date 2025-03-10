@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"image/color"
 	"log"
@@ -9,11 +10,17 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/ebitenui/ebitenui"
+	"github.com/ebitenui/ebitenui/widget"
+
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"golang.org/x/image/font/gofont/goregular"
+
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/oliveira-a/gochip/pkg/chip8"
+	"github.com/oliveira-a/gochip/chip8"
 )
 
 var (
@@ -23,17 +30,68 @@ var (
 	beepChan chan int
 )
 
+type Game struct {
+	ui *ebitenui.UI
+}
+
 func init() {
 	square = ebiten.NewImage(20, 20)
-	square.Fill(color.RGBA{R: 255, G: 140, B: 0, A: 1})
+	square.Fill(color.RGBA{R: 56, G: 104, B: 55, A: 1})
 
 	beepChan = make(chan int)
 
 	c8 = chip8.New(beepChan)
 
-	game = &Game{}
+	res, err := loadResources()
+	if err != nil {
+		panic(err)
+	}
+
+	root := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
+	)
+
+	ui := ebitenui.UI{
+		Container: root,
+	}
+
+	game = &Game{
+		ui: &ui,
+	}
+
+	// setup the toolbar
+	toolbar := newToolbar(&ui, res)
+	root.AddChild(toolbar.container)
+
 	ebiten.SetWindowSize((640 * 2), (320 * 2))
 	ebiten.SetMaxTPS(120)
+}
+
+type resources struct {
+	font text.Face
+}
+
+func loadResources() (*resources, error) {
+	fnt, err := loadFont(16)
+	if err != nil {
+		return nil, err
+	}
+	return &resources{
+		font: fnt,
+	}, nil
+}
+
+func loadFont(size float64) (text.Face, error) {
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(goregular.TTF))
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	return &text.GoTextFace{
+		Source: s,
+		Size:   size,
+	}, nil
+
 }
 
 func main() {
@@ -97,9 +155,6 @@ func listenForAudio() {
 	}
 }
 
-type Game struct {
-}
-
 func btoi(b bool) uint8 {
 	if b {
 		return 1
@@ -137,6 +192,8 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("FPS: %f", ebiten.ActualFPS()), 0, 0)
 
+	screen.Fill(color.RGBA{R: 200, G: 230, B: 142, A: 255})
+
 	for x := 0; x < chip8.Cols; x++ {
 		for y := 0; y < chip8.Rows; y++ {
 			if c8.Vram[x][y] == 1 {
@@ -146,6 +203,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
+
+	g.ui.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
