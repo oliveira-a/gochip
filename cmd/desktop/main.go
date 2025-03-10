@@ -9,6 +9,7 @@ import (
 	"path"
 	"runtime"
 	"time"
+	"embed"
 
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
@@ -29,8 +30,11 @@ var (
 	game     *Game
 	beepChan chan int
 
-	backgroundColor color.Color = color.RGBA{R: 0, G: 0, B: 0, A: 0}
-	tileColor color.Color = color.RGBA{R: 255, G: 128, B: 0, A: 1}
+	//go:embed static/roms/*.ch8
+	roms embed.FS
+
+	backgroundColor color.Color = color.Black
+	tileColor color.Color = color.White
 )
 
 type Game struct {
@@ -98,36 +102,18 @@ func loadFont(size float64) (text.Face, error) {
 }
 
 func main() {
-	if len(os.Args) == 1 {
-		fmt.Println("Please specify a path to a rom.")
-
-		return
-	}
-
-	rom, err := os.Open(os.Args[1])
+	rom, err := roms.ReadFile("static/roms/pong.ch8")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	stat, err := rom.Stat()
-	if err != nil {
-		panic(err)
-	}
-
-	b := make([]byte, stat.Size())
-	_, err = rom.Read(b)
-	if err != nil {
-		panic(err)
-	}
-	rom.Close()
-
-	if err = c8.LoadRom(b); err != nil {
-		panic(err)
+	if err = c8.LoadRom(rom); err != nil {
+		log.Fatal(err)
 	}
 
 	go listenForAudio()
 
-	if err := ebiten.RunGame(game); err != nil {
+	if err = ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}
 }
