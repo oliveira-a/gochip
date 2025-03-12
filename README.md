@@ -32,27 +32,13 @@ To run or modify this project, you need:
 
 2. Install the necessary Go dependencies:
    ```bash
-   go mod download
+   go get .
    ```
 
-3. Build the project:
+3. Run the project
    ```bash
-   go build ./cmd/desktop
+   go run .
    ```
-
-### Usage
-
-To run a CHIP-8 ROM with the virtual machine, use the following command:
-
-```bash
-./desktop <path-to-rom-file>
-```
-
-For example:
-
-```bash
-./desktop roms/pong.ch8
-```
 
 ### Controls
 
@@ -66,10 +52,6 @@ Z X C V   -->  A 0 B F
 ```
 
 - Use these keys to control games, as each game may have different key mappings.
-
-### Configuration
-
-You can configure various aspects of the CHIP-8 virtual machine, such as the CPU speed, display scaling, and more, by modifying the `config.go` file.
 
 ## Contributing
 
@@ -93,6 +75,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Cowgod's CHIP-8 Technical Reference](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM) was an invaluable resource during the development of this virtual machine.
 
 ---
-
-Happy coding!
 
