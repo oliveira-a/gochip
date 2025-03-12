@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"io/fs"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/ebitenui/ebitenui"
@@ -129,9 +130,9 @@ func main() {
 	// todo: this should be settable by the user
 	ebiten.SetTPS(120 * 2)
 
-	// Scan all the available ROMs in the static/roms
+	// Scan all of the available ROMs in the static/roms
 	// directory and extract their name to create list items
-	// for the sidelist game selection.
+	// for the sidelist rom selection.
 	entries, err := fs.ReadDir(roms, "static/roms")
 	if err != nil {
 		log.Fatal(err)
@@ -139,27 +140,33 @@ func main() {
 
 	var listItems []any
 	for _, ent := range entries {
-		// todo: remove '.ch8' from entry name
-		listItems = append(listItems, listItem{name: ent.Name()})
+		// avoids reading files without the '.ch8' extension.
+		if dn, ok := strings.CutSuffix(ent.Name(), ".ch8"); ok {
+			li := listItem{
+				name: dn,
+				path: fmt.Sprintf("%s/%s", "static/roms", ent.Name()),
+			}
+
+			listItems = append(listItems, li)
+		}
 	}
 
 	// Define how to handle the rom selection here.
 	e := func(args *widget.ListEntrySelectedEventArgs) {
-		// todo: specify how to change the ROM here.
-		fmt.Println("foo")
+		rp := args.Entry.(listItem).path
+
+		rom, err := roms.ReadFile(rp)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err = game.c8.LoadRom(rom); err != nil {
+			log.Fatal(err)
+		}
 	}
 	sidelist := newSidelist(listItems, e, sidelistWidth, winHeight)
 
 	root.AddChild(sidelist.container)
-
-	// Load the default ROM.
-	rom, err := roms.ReadFile("static/roms/pong.ch8")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err = game.c8.LoadRom(rom); err != nil {
-		log.Fatal(err)
-	}
 
 	// A go routine that listens for audio evenst through
 	// the beep channel. Plays the sound from the 'beep.mp3'

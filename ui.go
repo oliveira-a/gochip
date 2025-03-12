@@ -17,7 +17,13 @@ import (
 )
 
 type listItem struct {
+	// used for the display name
 	name string
+
+	// holds the path to the rom in the our embedded
+	// directory. Later used in the callback function
+	// defined in the client code.
+	path string
 }
 
 type sidelist struct {
