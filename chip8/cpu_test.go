@@ -9,7 +9,7 @@ var vm *VM
 var quit chan uint8
 
 func setup() {
-	vm = New(nil)
+	vm = New(nil, false)
 }
 
 func teardown() {
