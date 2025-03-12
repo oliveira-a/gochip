@@ -71,6 +71,25 @@ func (c *VM) LoadRom(b []byte) error {
 		return errors.New("Rom buffer has exceeded the maximum size.")
 	}
 
+	c.pc = 0x200
+	c.ir = 0
+	c.sp = 0
+	c.dt = 0
+	c.st = 0
+
+	// ensure memory is cleared
+	for i := c.pc; i < uint16(len(c.memory)); i++ {
+		c.memory[uint16(i)] = 0
+	}
+
+	// ensure vram is cleared
+	for y := 0; y < Rows; y++ {
+		for x := 0; x < Cols; x++ {
+			c.Vram[x][y] = 0
+		}
+	}
+
+	// load the buffer into memory
 	for i := 0; i < len(b); i++ {
 		c.memory[c.pc+uint16(i)] = b[i]
 	}
