@@ -68,17 +68,17 @@ func newSidelist(
 		widget.ListOpts.ScrollContainerOpts(
 			// Set the background images/color for the list
 			widget.ScrollContainerOpts.Image(&widget.ScrollContainerImage{
-				Idle:     image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
-				Disabled: image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
-				Mask:     image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
+				Idle:     image.NewNineSliceColor(color.NRGBA{0, 0, 0, 255}),
+				Disabled: image.NewNineSliceColor(color.NRGBA{0, 0, 0, 255}),
+				Mask:     image.NewNineSliceColor(color.NRGBA{0, 0, 0, 255}),
 			}),
 		),
 
 		widget.ListOpts.SliderOpts(
 			// Set the background images/color for the background of the slider track
 			widget.SliderOpts.Images(&widget.SliderTrackImage{
-				Idle:  image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
-				Hover: image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
+				Idle:  image.NewNineSliceColor(color.NRGBA{0, 0, 0, 255}),
+				Hover: image.NewNineSliceColor(color.NRGBA{0, 0, 0, 255}),
 			}, b),
 			widget.SliderOpts.MinHandleSize(5),
 			// Set how wide the track should be
@@ -129,11 +129,9 @@ func newSidelist(
 }
 
 func loadButtonImage() (*widget.ButtonImage, error) {
-	idle := image.NewNineSliceColor(color.NRGBA{R: 170, G: 170, B: 180, A: 255})
-
-	hover := image.NewNineSliceColor(color.NRGBA{R: 130, G: 130, B: 150, A: 255})
-
-	pressed := image.NewNineSliceColor(color.NRGBA{R: 255, G: 100, B: 120, A: 255})
+	idle := image.NewNineSliceColor(color.NRGBA{R: 255, G: 255, B: 255, A: 255})
+	hover := image.NewNineSliceColor(color.NRGBA{R: 255, G: 255, B: 255, A: 255})
+	pressed := image.NewNineSliceColor(color.NRGBA{R: 255, G: 255, B: 255, A: 255})
 
 	return &widget.ButtonImage{
 		Idle:    idle,
