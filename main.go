@@ -72,6 +72,8 @@ func (g *Game) Update() error {
 	g.c8.Keys[0xb] = uint8(btoi(ebiten.IsKeyPressed(ebiten.KeyC)))
 	g.c8.Keys[0xd] = uint8(btoi(ebiten.IsKeyPressed(ebiten.KeyV)))
 
+	g.ui.Update()
+
 	return nil
 }
 
@@ -95,7 +97,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 640 * 2, 320 + 100*2
+	return 640 * 2, 320 * 2
 }
 
 func main() {
@@ -107,11 +109,14 @@ func main() {
 	beepChan = make(chan int)
 	game = &Game{
 		ui:   &ebitenui.UI{Container: root},
-		c8:   chip8.New(beepChan),
+
+		// todo: create a program flag for debug mode
+		c8:   chip8.New(beepChan, false),
+
 		tile: ebiten.NewImage(20, 20),
 	}
 
-	ebiten.SetWindowSize((640 * 2), (320 * 2))
+	ebiten.SetWindowSize((640*2)+150, (320 * 2))
 	ebiten.SetMaxTPS(120)
 
 	// Scan all the available ROMs in the static/roms

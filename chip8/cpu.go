@@ -15,6 +15,8 @@ const (
 	Fps   = 60
 )
 
+var debug bool
+
 type VM struct {
 	Vram [Cols][Rows]uint8
 
@@ -49,7 +51,9 @@ func init() {
 	log.SetFlags(log.Ltime)
 }
 
-func New(audio chan int) *VM {
+func New(audio chan int, debugMode bool) *VM {
+	debug = debugMode
+
 	cpu := &VM{
 		pc:    0x200,
 		audio: audio,
@@ -415,5 +419,9 @@ func nnn(ins uint16) uint16 {
 }
 
 func logInstruction(ins uint16, msg string) {
+	if !debug {
+		return
+	}
+
 	log.Printf("| Executing '%04x': %s\n", ins, msg)
 }
