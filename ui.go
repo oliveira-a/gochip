@@ -26,7 +26,11 @@ type sidelist struct {
 }
 
 // The side list that allows the user to select a game
-func newSidelist(items []any, itemEventHandler func(args *widget.ListEntrySelectedEventArgs)) *sidelist {
+func newSidelist(
+	items []any,
+	entrySelectedEventHandler func(args *widget.ListEntrySelectedEventArgs),
+	w, h int,
+) *sidelist {
 	root := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewGridLayout(
 			widget.GridLayoutOpts.Columns(2),
@@ -43,7 +47,7 @@ func newSidelist(items []any, itemEventHandler func(args *widget.ListEntrySelect
 
 	lw := widget.NewList(
 		widget.ListOpts.ContainerOpts(widget.ContainerOpts.WidgetOpts(
-			widget.WidgetOpts.MinSize(150, 0),
+			widget.WidgetOpts.MinSize(w, h),
 			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
 				HorizontalPosition: widget.AnchorLayoutPositionStart,
 				VerticalPosition:   widget.AnchorLayoutPositionEnd,
@@ -105,7 +109,7 @@ func newSidelist(items []any, itemEventHandler func(args *widget.ListEntrySelect
 
 		// Provide the function to run when a list item is
 		// selected.
-		widget.ListOpts.EntrySelectedHandler(itemEventHandler),
+		widget.ListOpts.EntrySelectedHandler(entrySelectedEventHandler),
 	)
 
 	root.AddChild(lw)

@@ -20,6 +20,13 @@ import (
 	"github.com/oliveira-a/gochip/chip8"
 )
 
+const (
+	winWidth  = 1280
+	winHeight = 640
+
+	sidelistWidth = 150
+)
+
 var (
 	square *ebiten.Image
 	game   *Game
@@ -87,7 +94,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		for y := 0; y < chip8.Rows; y++ {
 			if g.c8.Vram[x][y] == 1 {
 				opts := &ebiten.DrawImageOptions{}
-				opts.GeoM.Translate(float64(x*20), float64(y*20))
+				opts.GeoM.Translate(float64(x*20)+155, float64(y*20))
 				screen.DrawImage(g.tile, opts)
 			}
 		}
@@ -97,7 +104,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 640 * 2, 320 * 2
+	return outsideWidth, outsideHeight
 }
 
 func main() {
@@ -108,16 +115,19 @@ func main() {
 
 	beepChan = make(chan int)
 	game = &Game{
-		ui:   &ebitenui.UI{Container: root},
+		ui: &ebitenui.UI{Container: root},
 
 		// todo: create a program flag for debug mode
-		c8:   chip8.New(beepChan, false),
+		c8: chip8.New(beepChan, false),
 
 		tile: ebiten.NewImage(20, 20),
 	}
 
-	ebiten.SetWindowSize((640*2)+150, (320 * 2))
-	ebiten.SetMaxTPS(120)
+	// allow a buffer of 155 for the games sidelist
+	ebiten.SetWindowSize(winWidth+sidelistWidth, winHeight)
+
+	// todo: this should be settable by the user
+	ebiten.SetTPS(120 * 2)
 
 	// Scan all the available ROMs in the static/roms
 	// directory and extract their name to create list items
@@ -133,11 +143,12 @@ func main() {
 		listItems = append(listItems, listItem{name: ent.Name()})
 	}
 
+	// Define how to handle the rom selection here.
 	e := func(args *widget.ListEntrySelectedEventArgs) {
 		// todo: specify how to change the ROM here.
 		fmt.Println("foo")
 	}
-	sidelist := newSidelist(listItems, e)
+	sidelist := newSidelist(listItems, e, sidelistWidth, winHeight)
 
 	root.AddChild(sidelist.container)
 
