@@ -24,7 +24,7 @@ import (
 const (
 	winWidth  = 640
 	winHeight = 320
-	tileSize = 10
+	tileSize  = 10
 
 	sidelistWidth = 150
 )

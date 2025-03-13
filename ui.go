@@ -6,14 +6,14 @@ package main
 
 import (
 	"bytes"
-	"log"
-
+	_ "embed"
 	"image/color"
+	"log"
 
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"golang.org/x/image/font/gofont/goregular"
+	_ "golang.org/x/image/font/gofont/goregular"
 )
 
 type listItem struct {
@@ -30,6 +30,9 @@ type sidelist struct {
 	container  *widget.Container
 	listWidget *widget.List
 }
+
+//go:embed static/press-start-2p.ttf
+var font []byte
 
 // The side list that allows the user to select a game
 func newSidelist(
@@ -49,7 +52,7 @@ func newSidelist(
 		)))
 
 	b, _ := loadButtonImage()
-	f, _ := loadFont(20)
+	f, _ := loadFont(15, font)
 
 	lw := widget.NewList(
 		widget.ListOpts.ContainerOpts(widget.ContainerOpts.WidgetOpts(
@@ -61,6 +64,8 @@ func newSidelist(
 				Padding:            widget.NewInsetsSimple(50),
 			}),
 		)),
+
+		widget.ListOpts.EntryTextPadding(widget.NewInsetsSimple(5)),
 
 		// set the entries
 		widget.ListOpts.Entries(items),
@@ -140,8 +145,8 @@ func loadButtonImage() (*widget.ButtonImage, error) {
 	}, nil
 }
 
-func loadFont(size float64) (text.Face, error) {
-	s, err := text.NewGoTextFaceSource(bytes.NewReader(goregular.TTF))
+func loadFont(size float64, font []byte) (text.Face, error) {
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(font))
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
