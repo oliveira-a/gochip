@@ -22,8 +22,9 @@ import (
 )
 
 const (
-	winWidth  = 1280
-	winHeight = 640
+	winWidth  = 640
+	winHeight = 320
+	tileSize = 10
 
 	sidelistWidth = 150
 )
@@ -95,7 +96,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		for y := 0; y < chip8.Rows; y++ {
 			if g.c8.Vram[x][y] == 1 {
 				opts := &ebiten.DrawImageOptions{}
-				opts.GeoM.Translate(float64(x*20)+155, float64(y*20))
+				opts.GeoM.Translate(float64(x*tileSize)+sidelistWidth, float64(y*tileSize))
 				screen.DrawImage(g.tile, opts)
 			}
 		}
@@ -121,7 +122,7 @@ func main() {
 		// todo: create a program flag for debug mode
 		c8: chip8.New(beepChan, false),
 
-		tile: ebiten.NewImage(20, 20),
+		tile: ebiten.NewImage(tileSize, tileSize),
 	}
 
 	// allow a buffer of 155 for the games sidelist
