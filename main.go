@@ -12,7 +12,6 @@ import (
 
 	"github.com/ebitenui/ebitenui"
 
-	// todo: move this to the new library: github.com/faiface/beep/mp3
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
