@@ -1,4 +1,4 @@
-# CHIP-8 Virtual Machine in Go -- [Try it!]("https://gochip-1082672001032.europe-west2.run.app/")
+# CHIP-8 Virtual Machine in Go -- [Try it!](https://gochip-1082672001032.europe-west2.run.app/)
 
 This project is a CHIP-8 virtual machine (interpreter) written in Go. The CHIP-8 is a simple, interpreted programming language from the 1970s, designed for easy game development on early computers. This virtual machine reads CHIP-8 ROMs and executes them, allowing you to play classic CHIP-8 games.
 
