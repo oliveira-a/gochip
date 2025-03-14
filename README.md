@@ -47,9 +47,9 @@ To run or modify this project, you need:
    ```
 
 2. Run the container
-  ```bash
+   ```bash
    docker run -i gochip
-  ```
+   ```
 
 ### Controls
 
