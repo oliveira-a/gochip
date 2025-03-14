@@ -7,6 +7,8 @@ import (
 	"image/color"
 	"io/fs"
 	"log"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -127,8 +129,16 @@ func main() {
 	// allow a buffer of 155 for the games sidelist
 	ebiten.SetWindowSize(winWidth+sidelistWidth, winHeight)
 
-	// todo: this should be settable by the user
-	ebiten.SetTPS(120 * 2)
+	tps := 120
+	if len(os.Args) > 1 && os.Args[1] == "-tps" {
+		i, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			fmt.Printf("Invalid input '%s' for option '-tps', ignoring...\n", os.Args[2])
+		} else {
+			tps = i
+		}
+	}
+	ebiten.SetTPS(tps)
 
 	// Scan all of the available ROMs in the static/roms
 	// directory and extract their name to create list items
