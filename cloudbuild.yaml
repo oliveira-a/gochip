@@ -1,10 +1,13 @@
 steps:
-- name: "gcr.io/cloud-builders/docker"
-  args:
-  - build
-  - "--tag=gcr.io/$PROJECT_ID/gochip"
-  - "--file=./server/Dockerfile"
-  - .
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+    - build
+    - "--tag=gcr.io/$PROJECT_ID/gochip"
+    - "--file=./server/Dockerfile"
+    - .
+
+options:
+  logging: CLOUD_LOGGING_ONLY
 
 images:
-- "gcr.io/$PROJECT_ID/gochip"
+  - "gcr.io/$PROJECT_ID/gochip"
