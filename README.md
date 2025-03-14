@@ -1,4 +1,4 @@
-# CHIP-8 Virtual Machine in Go
+# CHIP-8 Virtual Machine in Go -- [Try it!]("https://gochip-1082672001032.europe-west2.run.app/")
 
 This project is a CHIP-8 virtual machine (interpreter) written in Go. The CHIP-8 is a simple, interpreted programming language from the 1970s, designed for easy game development on early computers. This virtual machine reads CHIP-8 ROMs and executes them, allowing you to play classic CHIP-8 games.
 
@@ -20,7 +20,7 @@ This project is a CHIP-8 virtual machine (interpreter) written in Go. The CHIP-8
 To run or modify this project, you need:
 
 - [Go](https://golang.org/dl/) (version 1.18 or later)
-- A CHIP-8 ROM file (optional: there are many available online)
+- Docker (optional: if you want to run the web assembly version)
 
 ### Installing
 
@@ -39,6 +39,17 @@ To run or modify this project, you need:
    ```bash
    go run .
    ```
+### Web
+
+1. Build the image
+   ```bash
+   docker build -t gochip -f server/Dockerfile .
+   ```
+
+2. Run the container
+  ```bash
+   docker run -i gochip
+  ```
 
 ### Controls
 
