@@ -7,13 +7,13 @@ package main
 import (
 	"bytes"
 	_ "embed"
+	"fmt"
 	"image/color"
 	"log"
 
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	_ "golang.org/x/image/font/gofont/goregular"
 )
 
 type listItem struct {
@@ -156,4 +156,64 @@ func loadFont(size float64, font []byte) (text.Face, error) {
 		Source: s,
 		Size:   size,
 	}, nil
+}
+
+func newSlider() *widget.Container {
+	// construct a slider
+	slider := widget.NewSlider(
+		// Set the slider orientation - n/s vs e/w
+		widget.SliderOpts.Direction(widget.DirectionHorizontal),
+
+		// Set the minimum and maximum value for the slider
+		widget.SliderOpts.MinMax(60, 240),
+
+		widget.SliderOpts.WidgetOpts(
+			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
+				HorizontalPosition: widget.AnchorLayoutPositionEnd,
+				VerticalPosition:   widget.AnchorLayoutPositionEnd,
+			}),
+
+			// Set the widget's dimensions
+			widget.WidgetOpts.MinSize(150, 0),
+		),
+
+		widget.SliderOpts.Images(
+			// Set the track images
+			&widget.SliderTrackImage{
+				Idle:  image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
+				Hover: image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
+			},
+			// Set the handle images
+			&widget.ButtonImage{
+				Idle:    image.NewNineSliceColor(color.NRGBA{255, 100, 100, 255}),
+				Hover:   image.NewNineSliceColor(color.NRGBA{255, 100, 100, 255}),
+				Pressed: image.NewNineSliceColor(color.NRGBA{255, 100, 100, 255}),
+			},
+		),
+
+		// Set the size of the handle
+		widget.SliderOpts.FixedHandleSize(6),
+
+		// Set the offset to display the track
+		widget.SliderOpts.TrackOffset(0),
+
+		// Set the size to move the handle
+		widget.SliderOpts.PageSizeFunc(func() int {
+			return 1
+		}),
+
+		// Set the callback to call when the slider value is changed
+		widget.SliderOpts.ChangedHandler(func(args *widget.SliderChangedEventArgs) {
+			fmt.Println(args.Current, "dragging", args.Dragging)
+		}),
+	)
+
+	container := widget.NewContainer(
+		// the container will use an anchor layout to layout its single child widget
+		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
+	)
+
+	container.AddChild(slider)
+
+	return container
 }

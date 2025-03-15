@@ -111,35 +111,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	// Setup the UI
-	root := widget.NewContainer(
-		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
-	)
 
-	beepChan = make(chan int)
-	game = &Game{
-		ui: &ebitenui.UI{Container: root},
-
-		// todo: create a program flag for debug mode
-		c8: chip8.New(beepChan, false),
-
-		tile: ebiten.NewImage(tileSize, tileSize),
-	}
-
-	// allow a buffer of 155 for the games sidelist
-	ebiten.SetWindowSize(winWidth+sidelistWidth, winHeight)
-
-	tps := 120
-	if len(os.Args) > 1 && os.Args[1] == "-tps" {
-		i, err := strconv.Atoi(os.Args[2])
-		if err != nil {
-			fmt.Printf("Invalid input '%s' for option '-tps', ignoring...\n", os.Args[2])
-		} else {
-			tps = i
-		}
-	}
-	ebiten.SetTPS(tps)
-
+	// UI setup
+	//
 	// Scan all of the available ROMs in the static/roms
 	// directory and extract their name to create list items
 	// for the sidelist rom selection.
@@ -174,9 +148,50 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	sidelist := newSidelist(listItems, e, sidelistWidth, winHeight)
 
-	root.AddChild(sidelist.container)
+	sidelist := newSidelist(listItems,
+		e,
+		sidelistWidth,
+		winHeight,
+	)
+	slider := newSlider()
+
+	controls := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
+	)
+
+	root := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
+	)
+
+	controls.AddChild(sidelist.container)
+	controls.AddChild(slider)
+
+	root.AddChild(controls)
+
+	tps := 120
+	if len(os.Args) > 1 && os.Args[1] == "-tps" {
+		i, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			fmt.Printf("Invalid input '%s' for option '-tps', ignoring...\n", os.Args[2])
+		} else {
+			tps = i
+		}
+	}
+
+	ebiten.SetTPS(tps)
+
+	beepChan = make(chan int)
+	game = &Game{
+		ui: &ebitenui.UI{Container: root},
+
+		// todo: create a program flag for debug mode
+		c8: chip8.New(beepChan, false),
+
+		tile: ebiten.NewImage(tileSize, tileSize),
+	}
+
+	ebiten.SetWindowSize(winWidth+sidelistWidth, winHeight)
 
 	// A go routine that listens for audio evenst through
 	// the beep channel. Plays the sound from the 'beep.mp3'
