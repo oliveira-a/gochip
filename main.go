@@ -133,7 +133,7 @@ func main() {
 		}
 	}
 
-	sidelist := newSidelist(
+	romList := newRomList(
 		listItems,
 		// Define how to handle the rom selection
 		func(args *widget.ListEntrySelectedEventArgs) {
@@ -157,7 +157,7 @@ func main() {
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
 		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.ContextMenu(tickRateContextMenu)),
 	)
-	root.AddChild(sidelist.container)
+	root.AddChild(romList)
 
 	beepChan = make(chan int)
 	game = &Game{

@@ -7,7 +7,6 @@ package main
 import (
 	"bytes"
 	_ "embed"
-	"fmt"
 	"image/color"
 	"log"
 
@@ -27,20 +26,15 @@ type listItem struct {
 	path string
 }
 
-type sidelist struct {
-	container  *widget.Container
-	listWidget *widget.List
-}
-
 //go:embed static/press-start-2p.ttf
 var font []byte
 
 // The side list that allows the user to select a game
-func newSidelist(
+func newRomList(
 	items []any,
 	entrySelectedEventHandler func(args *widget.ListEntrySelectedEventArgs),
 	w, h int,
-) *sidelist {
+) *widget.Container {
 	root := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewGridLayout(
 			widget.GridLayoutOpts.Columns(2),
@@ -126,12 +120,7 @@ func newSidelist(
 
 	root.AddChild(lw)
 
-	sl := &sidelist{
-		container:  root,
-		listWidget: lw,
-	}
-
-	return sl
+	return root
 }
 
 func loadButtonImage() (*widget.ButtonImage, error) {
@@ -232,64 +221,4 @@ func newTickRateContextMenu() *widget.Container {
 	contextMenu.AddChild(opt240TPS)
 
 	return contextMenu
-}
-
-func newSlider() *widget.Container {
-	// construct a slider
-	slider := widget.NewSlider(
-		// Set the slider orientation - n/s vs e/w
-		widget.SliderOpts.Direction(widget.DirectionHorizontal),
-
-		// Set the minimum and maximum value for the slider
-		widget.SliderOpts.MinMax(60, 240),
-
-		widget.SliderOpts.WidgetOpts(
-			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
-				HorizontalPosition: widget.AnchorLayoutPositionEnd,
-				VerticalPosition:   widget.AnchorLayoutPositionEnd,
-			}),
-
-			// Set the widget's dimensions
-			widget.WidgetOpts.MinSize(150, 0),
-		),
-
-		widget.SliderOpts.Images(
-			// Set the track images
-			&widget.SliderTrackImage{
-				Idle:  image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
-				Hover: image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
-			},
-			// Set the handle images
-			&widget.ButtonImage{
-				Idle:    image.NewNineSliceColor(color.NRGBA{255, 100, 100, 255}),
-				Hover:   image.NewNineSliceColor(color.NRGBA{255, 100, 100, 255}),
-				Pressed: image.NewNineSliceColor(color.NRGBA{255, 100, 100, 255}),
-			},
-		),
-
-		// Set the size of the handle
-		widget.SliderOpts.FixedHandleSize(6),
-
-		// Set the offset to display the track
-		widget.SliderOpts.TrackOffset(0),
-
-		// Set the size to move the handle
-		widget.SliderOpts.PageSizeFunc(func() int {
-			return 1
-		}),
-
-		// Set the callback to call when the slider value is changed
-		widget.SliderOpts.ChangedHandler(func(args *widget.SliderChangedEventArgs) {
-			fmt.Println(args.Current, "dragging", args.Dragging)
-		}),
-	)
-
-	container := widget.NewContainer(
-		// the container will use an anchor layout to layout its single child widget
-		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
-	)
-
-	container.AddChild(slider)
-
-	return container
 }
