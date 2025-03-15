@@ -13,6 +13,7 @@ import (
 
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
@@ -145,6 +146,18 @@ func loadButtonImage() (*widget.ButtonImage, error) {
 	}, nil
 }
 
+func loadContextMenuButtonImage() (*widget.ButtonImage, error) {
+	idle := image.NewNineSliceColor(color.NRGBA{R: 255, G: 255, B: 255, A: 255})
+	hover := image.NewNineSliceColor(color.NRGBA{R: 0, G: 0, B: 0, A: 255})
+	pressed := image.NewNineSliceColor(color.NRGBA{R: 0, G: 0, B: 0, A: 255})
+
+	return &widget.ButtonImage{
+		Idle:    idle,
+		Hover:   hover,
+		Pressed: pressed,
+	}, nil
+}
+
 func loadFont(size float64, font []byte) (text.Face, error) {
 	s, err := text.NewGoTextFaceSource(bytes.NewReader(font))
 	if err != nil {
@@ -156,6 +169,69 @@ func loadFont(size float64, font []byte) (text.Face, error) {
 		Source: s,
 		Size:   size,
 	}, nil
+}
+
+func newTickRateContextMenu() *widget.Container {
+	contextMenu := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewRowLayout(widget.RowLayoutOpts.Direction(widget.DirectionVertical))),
+	)
+	buttonImage, _ := loadContextMenuButtonImage()
+	face, _ := loadFont(10, font)
+
+	opt60TPS := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+
+		// specify the button's text, the font face, and the color
+		widget.ButtonOpts.Text("60  TPS", face, &widget.ButtonTextColor{
+			Idle:  color.NRGBA{0, 0, 0, 255},
+			Hover: color.NRGBA{255, 255, 255, 255},
+		}),
+
+		widget.ButtonOpts.TextPadding(widget.NewInsetsSimple(5)),
+
+		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
+			ebiten.SetTPS(60)
+		}),
+	)
+
+	opt120TPS := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+
+		// specify the button's text, the font face, and the color
+		widget.ButtonOpts.Text("120 TPS", face, &widget.ButtonTextColor{
+			Idle:  color.NRGBA{0, 0, 0, 255},
+			Hover: color.NRGBA{255, 255, 255, 255},
+		}),
+
+		widget.ButtonOpts.TextPadding(widget.NewInsetsSimple(5)),
+
+		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
+			ebiten.SetTPS(120)
+		}),
+	)
+
+	opt240TPS := widget.NewButton(
+		// specify the images to use
+		widget.ButtonOpts.Image(buttonImage),
+
+		// specify the button's text, the font face, and the color
+		widget.ButtonOpts.Text("240 TPS", face, &widget.ButtonTextColor{
+			Idle:  color.NRGBA{0, 0, 0, 255},
+			Hover: color.NRGBA{255, 255, 255, 255},
+		}),
+
+		widget.ButtonOpts.TextPadding(widget.NewInsetsSimple(5)),
+
+		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
+			ebiten.SetTPS(240)
+		}),
+	)
+
+	contextMenu.AddChild(opt60TPS)
+	contextMenu.AddChild(opt120TPS)
+	contextMenu.AddChild(opt240TPS)
+
+	return contextMenu
 }
 
 func newSlider() *widget.Container {

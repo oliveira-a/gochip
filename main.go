@@ -7,8 +7,6 @@ import (
 	"image/color"
 	"io/fs"
 	"log"
-	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -135,51 +133,31 @@ func main() {
 		}
 	}
 
-	// Define how to handle the rom selection here.
-	e := func(args *widget.ListEntrySelectedEventArgs) {
-		rp := args.Entry.(listItem).path
+	sidelist := newSidelist(
+		listItems,
+		// Define how to handle the rom selection
+		func(args *widget.ListEntrySelectedEventArgs) {
+			rp := args.Entry.(listItem).path
 
-		rom, err := roms.ReadFile(rp)
-		if err != nil {
-			log.Fatal(err)
-		}
+			rom, err := roms.ReadFile(rp)
+			if err != nil {
+				log.Fatal(err)
+			}
 
-		if err = game.c8.LoadRom(rom); err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	sidelist := newSidelist(listItems,
-		e,
+			if err = game.c8.LoadRom(rom); err != nil {
+				log.Fatal(err)
+			}
+		},
 		sidelistWidth,
 		winHeight,
 	)
-	slider := newSlider()
-
-	controls := widget.NewContainer(
-		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
-	)
+	tickRateContextMenu := newTickRateContextMenu()
 
 	root := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
+		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.ContextMenu(tickRateContextMenu)),
 	)
-
-	controls.AddChild(sidelist.container)
-	controls.AddChild(slider)
-
-	root.AddChild(controls)
-
-	tps := 120
-	if len(os.Args) > 1 && os.Args[1] == "-tps" {
-		i, err := strconv.Atoi(os.Args[2])
-		if err != nil {
-			fmt.Printf("Invalid input '%s' for option '-tps', ignoring...\n", os.Args[2])
-		} else {
-			tps = i
-		}
-	}
-
-	ebiten.SetTPS(tps)
+	root.AddChild(sidelist.container)
 
 	beepChan = make(chan int)
 	game = &Game{
