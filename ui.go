@@ -7,6 +7,7 @@ package main
 import (
 	"bytes"
 	_ "embed"
+	"fmt"
 	"image/color"
 	"log"
 
@@ -46,7 +47,7 @@ func newRomList(
 			widget.GridLayoutOpts.Spacing(0, 0),
 		)))
 
-	b, _ := loadButtonImage()
+	b, _ := loadListItemButtonImage()
 	f, _ := loadFont(15, font)
 
 	lw := widget.NewList(
@@ -123,7 +124,7 @@ func newRomList(
 	return root
 }
 
-func loadButtonImage() (*widget.ButtonImage, error) {
+func loadListItemButtonImage() (*widget.ButtonImage, error) {
 	idle := image.NewNineSliceColor(color.NRGBA{R: 255, G: 255, B: 255, A: 255})
 	hover := image.NewNineSliceColor(color.NRGBA{R: 255, G: 255, B: 255, A: 255})
 	pressed := image.NewNineSliceColor(color.NRGBA{R: 255, G: 255, B: 255, A: 255})
@@ -133,6 +134,41 @@ func loadButtonImage() (*widget.ButtonImage, error) {
 		Hover:   hover,
 		Pressed: pressed,
 	}, nil
+}
+
+func newTickRateContextMenu() *widget.Container {
+	contextMenu := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewRowLayout(widget.RowLayoutOpts.Direction(widget.DirectionVertical))),
+	)
+
+	contextMenu.AddChild(newTickRateContextMenuButton(60))
+	contextMenu.AddChild(newTickRateContextMenuButton(120))
+	contextMenu.AddChild(newTickRateContextMenuButton(240))
+
+	return contextMenu
+}
+
+func newTickRateContextMenuButton(tickRate int) *widget.Button {
+	btnImg, _ := loadContextMenuButtonImage()
+	face, _ := loadFont(10, font)
+	btn := widget.NewButton(
+		// specify the images to use
+		widget.ButtonOpts.Image(btnImg),
+
+		// specify the button's text, the font face, and the color
+		widget.ButtonOpts.Text(fmt.Sprintf("%-5d TPS", tickRate), face, &widget.ButtonTextColor{
+			Idle:  color.NRGBA{0, 0, 0, 255},
+			Hover: color.NRGBA{255, 255, 255, 255},
+		}),
+
+		widget.ButtonOpts.TextPadding(widget.NewInsetsSimple(5)),
+
+		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
+			ebiten.SetTPS(tickRate)
+		}),
+	)
+
+	return btn
 }
 
 func loadContextMenuButtonImage() (*widget.ButtonImage, error) {
@@ -158,67 +194,4 @@ func loadFont(size float64, font []byte) (text.Face, error) {
 		Source: s,
 		Size:   size,
 	}, nil
-}
-
-func newTickRateContextMenu() *widget.Container {
-	contextMenu := widget.NewContainer(
-		widget.ContainerOpts.Layout(widget.NewRowLayout(widget.RowLayoutOpts.Direction(widget.DirectionVertical))),
-	)
-	buttonImage, _ := loadContextMenuButtonImage()
-	face, _ := loadFont(10, font)
-
-	opt60TPS := widget.NewButton(
-		widget.ButtonOpts.Image(buttonImage),
-
-		// specify the button's text, the font face, and the color
-		widget.ButtonOpts.Text("60  TPS", face, &widget.ButtonTextColor{
-			Idle:  color.NRGBA{0, 0, 0, 255},
-			Hover: color.NRGBA{255, 255, 255, 255},
-		}),
-
-		widget.ButtonOpts.TextPadding(widget.NewInsetsSimple(5)),
-
-		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
-			ebiten.SetTPS(60)
-		}),
-	)
-
-	opt120TPS := widget.NewButton(
-		widget.ButtonOpts.Image(buttonImage),
-
-		// specify the button's text, the font face, and the color
-		widget.ButtonOpts.Text("120 TPS", face, &widget.ButtonTextColor{
-			Idle:  color.NRGBA{0, 0, 0, 255},
-			Hover: color.NRGBA{255, 255, 255, 255},
-		}),
-
-		widget.ButtonOpts.TextPadding(widget.NewInsetsSimple(5)),
-
-		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
-			ebiten.SetTPS(120)
-		}),
-	)
-
-	opt240TPS := widget.NewButton(
-		// specify the images to use
-		widget.ButtonOpts.Image(buttonImage),
-
-		// specify the button's text, the font face, and the color
-		widget.ButtonOpts.Text("240 TPS", face, &widget.ButtonTextColor{
-			Idle:  color.NRGBA{0, 0, 0, 255},
-			Hover: color.NRGBA{255, 255, 255, 255},
-		}),
-
-		widget.ButtonOpts.TextPadding(widget.NewInsetsSimple(5)),
-
-		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
-			ebiten.SetTPS(240)
-		}),
-	)
-
-	contextMenu.AddChild(opt60TPS)
-	contextMenu.AddChild(opt120TPS)
-	contextMenu.AddChild(opt240TPS)
-
-	return contextMenu
 }

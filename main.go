@@ -21,11 +21,10 @@ import (
 )
 
 const (
-	winWidth  = 640
-	winHeight = 320
-	tileSize  = 10
-
-	sidelistWidth = 150
+	winWidth     = 640
+	winHeight    = 320
+	tileSize     = 10
+	romListWidth = 150
 )
 
 var (
@@ -95,7 +94,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		for y := 0; y < chip8.Rows; y++ {
 			if g.c8.Vram[x][y] == 1 {
 				opts := &ebiten.DrawImageOptions{}
-				opts.GeoM.Translate(float64(x*tileSize)+sidelistWidth, float64(y*tileSize))
+				opts.GeoM.Translate(float64(x*tileSize)+romListWidth, float64(y*tileSize))
 				screen.DrawImage(g.tile, opts)
 			}
 		}
@@ -114,7 +113,7 @@ func main() {
 	//
 	// Scan all of the available ROMs in the static/roms
 	// directory and extract their name to create list items
-	// for the sidelist rom selection.
+	// for the romList rom selection.
 	entries, err := fs.ReadDir(roms, "static/roms")
 	if err != nil {
 		log.Fatal(err)
@@ -148,7 +147,7 @@ func main() {
 				log.Fatal(err)
 			}
 		},
-		sidelistWidth,
+		romListWidth,
 		winHeight,
 	)
 	tickRateContextMenu := newTickRateContextMenu()
@@ -169,7 +168,7 @@ func main() {
 		tile: ebiten.NewImage(tileSize, tileSize),
 	}
 
-	ebiten.SetWindowSize(winWidth+sidelistWidth, winHeight)
+	ebiten.SetWindowSize(winWidth+romListWidth, winHeight)
 
 	// A go routine that listens for audio evenst through
 	// the beep channel. Plays the sound from the 'beep.mp3'
