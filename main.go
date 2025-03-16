@@ -184,7 +184,7 @@ func listenForAudio() {
 	fileBytesReader := bytes.NewReader(beepMp3)
 	decodedMp3, err := mp3.NewDecoder(fileBytesReader)
 	if err != nil {
-		log.Println("Error decoding mp3: %s\n", err)
+		log.Printf("Error decoding mp3: %s\n", err)
 		return
 	}
 
