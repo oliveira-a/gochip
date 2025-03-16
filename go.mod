@@ -3,17 +3,18 @@ module github.com/oliveira-a/gochip
 go 1.21
 
 require (
+	github.com/ebitengine/oto/v3 v3.2.0
+	github.com/ebitenui/ebitenui v0.6.0
 	github.com/faiface/beep v1.1.0
 	github.com/hajimehoshi/ebiten/v2 v2.7.8
+	github.com/hajimehoshi/go-mp3 v0.3.4
 )
 
 require (
 	github.com/ebitengine/gomobile v0.0.0-20240802043200-192f051f4fcc // indirect
 	github.com/ebitengine/hideconsole v1.0.0 // indirect
 	github.com/ebitengine/purego v0.7.1 // indirect
-	github.com/ebitenui/ebitenui v0.6.0 // indirect
 	github.com/go-text/typesetting v0.1.1-0.20240325125605-c7936fe59984 // indirect
-	github.com/hajimehoshi/go-mp3 v0.3.4 // indirect
 	github.com/hajimehoshi/oto v0.7.1 // indirect
 	github.com/jezek/xgb v1.1.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

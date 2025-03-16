@@ -105,7 +105,10 @@ func (vm *VM) Cycle() {
 	}
 
 	if vm.st > 0 {
-		vm.audio <- 1
+		select {
+			case vm.audio <- 1:
+			default:
+		}
 		vm.st--
 	}
 }

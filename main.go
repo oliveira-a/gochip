@@ -5,18 +5,18 @@ import (
 	"embed"
 	"fmt"
 	"image/color"
+	"io"
 	"io/fs"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/ebitengine/oto/v3"
 	"github.com/ebitenui/ebitenui"
-
 	"github.com/ebitenui/ebitenui/widget"
-	"github.com/faiface/beep/mp3"
-	"github.com/faiface/beep/speaker"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/go-mp3"
 	"github.com/oliveira-a/gochip/chip8"
 )
 
@@ -180,34 +180,40 @@ func main() {
 	}
 }
 
-// Used for the embedded mp3 beep audio.
-// 'mp3' requires an implementation of
-// `io.ReadCloser` and a `Close()` method
-// is needed.
-type BytesReadCloser struct {
-	*bytes.Reader
-}
-
-func (b *BytesReadCloser) Close() error {
-	return nil
-}
-
 func listenForAudio() {
-	b := &BytesReadCloser{Reader: bytes.NewReader(beepMp3)}
-	s, format, err := mp3.Decode(b)
+	fileBytesReader := bytes.NewReader(beepMp3)
+	decodedMp3, err := mp3.NewDecoder(fileBytesReader)
 	if err != nil {
-		panic(err)
+		log.Println("Error decoding mp3: %s\n", err)
+		return
 	}
-	defer s.Close()
 
-	speaker.Init(
-		format.SampleRate,
-		format.SampleRate.N(time.Second/10),
-	)
+	op := &oto.NewContextOptions{}
+	op.SampleRate = 44100
+	op.ChannelCount = 2
+	op.Format = oto.FormatSignedInt16LE
+
+	otoCtx, readyChan, err := oto.NewContext(op)
+	if err != nil {
+		log.Printf("Error creating new audio context: %s\n", err)
+	}
+	<-readyChan
+
+	player := otoCtx.NewPlayer(decodedMp3)
+	defer player.Close()
 
 	for {
 		<-beepChan
-		speaker.Play(s)
+		player.Play()
+
+		for player.IsPlaying() {
+			time.Sleep(time.Millisecond)
+		}
+
+		_, err := player.Seek(0, io.SeekStart)
+		if err != nil {
+			panic("player.Seek failed: " + err.Error())
+		}
 	}
 }
 
