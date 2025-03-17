@@ -59,9 +59,7 @@ func New(audio chan int, debugMode bool) *VM {
 		audio: audio,
 	}
 
-	for i := 0; i < len(font); i++ {
-		cpu.memory[i] = font[i]
-	}
+	copy(font[:], cpu.memory[0:len(font)])
 
 	return cpu
 }
