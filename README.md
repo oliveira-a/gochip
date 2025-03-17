@@ -48,7 +48,7 @@ To run or modify this project, you need:
 
 2. Run the container
    ```bash
-   docker run -i gochip
+   docker run -p 8080:8080 gochip
    ```
 
 ### Controls
