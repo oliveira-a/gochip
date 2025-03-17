@@ -27,6 +27,14 @@
                 justify-content: center;
                 min-height: 100vh;
         }
+                #instructions {
+                display: flex;
+                flex-direction: row;
+                align-items: left;
+                }
+                #instructions > ul {
+                padding-right: 10%
+                }
 </style>
 </head>
 <body>
@@ -40,7 +48,16 @@ U /"___|u   \/"_ \/U /"___| |'| |'|     ___    U|  _"\ u
   _)(|_       \\    _// \\  //   \\.-,_|___|_,-.||&gt;&gt;_
  (__)__)     (__)  (__)(__)(_") ("_)\_)-' '-(_/(__)__)
                 </pre>
-<iframe src="main.html" width="790" height="320"></iframe><br>
+<iframe src="main.html" width="790" height="320" scrolling="no"></iframe><br>
+<div id="instructions">
+<ul>
+<li>Select a game by clicking on a title from the left hand
+panel.</li>
+<li>Game's too slow? Change the TPS (ticks per second) by
+<b>right-clicking</b> and selecting an option.</li>
+<li>Use this keypad on the right for reference on what keys to
+use.</li>
+</ul>
 <table>
 <tr>
 <td>1</td>
@@ -67,6 +84,7 @@ U /"___|u   \/"_ \/U /"___| |'| |'|     ___    U|  _"\ u
 <td>V</td>
 </tr>
 </table>
+</div>
 <p>source code <a target="_blank" href=
 "https://github.com/oliveira-a/gochip">here</a> :)</p>
 </div>
