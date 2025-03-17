@@ -14,7 +14,7 @@ import (
 	oto "github.com/ebitengine/oto/v3"
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
-	"github.com/hajimehoshi/ebiten/v2"
+	ebiten "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/go-mp3"
 	"github.com/oliveira-a/gochip/chip8"
