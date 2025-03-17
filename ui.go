@@ -48,7 +48,7 @@ func newRomList(
 		)))
 
 	b, _ := loadListItemButtonImage()
-	f, _ := loadFont(15, font)
+	f, _ := loadFont(12, font)
 
 	lw := widget.NewList(
 		widget.ListOpts.ContainerOpts(widget.ContainerOpts.WidgetOpts(
