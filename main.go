@@ -212,7 +212,7 @@ func listenForAudio() {
 
 		_, err := player.Seek(0, io.SeekStart)
 		if err != nil {
-			log.Printf("player.Seek failed: %s", err)
+			log.Printf("player.Seek failed: %s\n", err)
 			return
 		}
 	}
