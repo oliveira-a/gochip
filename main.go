@@ -212,7 +212,8 @@ func listenForAudio() {
 
 		_, err := player.Seek(0, io.SeekStart)
 		if err != nil {
-			panic("player.Seek failed: " + err.Error())
+			log.Printf("player.Seek failed: %s", err)
+			return
 		}
 	}
 }
