@@ -64,26 +64,3 @@ Z X C V   -->  A 0 B F
 
 - Use these keys to control games, as each game may have different key mappings.
 
-## Contributing
-
-Feel free to fork this project and submit pull requests. Contributions for improving performance, adding new features, or fixing bugs are welcome!
-
-### To contribute:
-
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature/my-feature`)
-3. Commit your changes (`git commit -am 'Add new feature'`)
-4. Push to the branch (`git push origin feature/my-feature`)
-5. Create a new Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Thanks to the [CHIP-8 community](https://en.wikipedia.org/wiki/CHIP-8) for their documentation and game resources.
-- [Cowgod's CHIP-8 Technical Reference](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM) was an invaluable resource during the development of this virtual machine.
-
----
-
