@@ -95,8 +95,11 @@ func (c *VM) LoadRom(b []byte) error {
 	return nil
 }
 
-func (vm *VM) Cycle() {
-	vm.exec(vm.fetchInstruction())
+func (vm *VM) Cycle() error {
+	err := vm.exec(vm.fetchInstruction())
+	if err != nil {
+		return err
+	}
 
 	if vm.dt > 0 {
 		vm.dt--
@@ -109,6 +112,8 @@ func (vm *VM) Cycle() {
 		}
 		vm.st--
 	}
+
+	return nil
 }
 
 func (vm *VM) fetchInstruction() uint16 {
@@ -136,23 +141,19 @@ func (vm *VM) exec(ins uint16) error {
 				}
 			}
 			vm.pc += 2
-			break
 		case 0x00EE:
 			logInstruction(ins, "Return from a subroutine.")
 			vm.pc = vm.stack[vm.sp] + 2
 			vm.sp--
-			break
 		}
 	case 0x1000:
 		logInstruction(ins, "Jump to the location.")
 		vm.pc = nnn
-		break
 	case 0x2000:
 		logInstruction(ins, "Call a subroutine.")
 		vm.sp += 1
 		vm.stack[vm.sp] = vm.pc
 		vm.pc = nnn
-		break
 	case 0x3000:
 		logInstruction(ins, "Skip the next instruction if vX = nn.")
 		if uint16(vm.registers[vX]) == nn {
@@ -160,7 +161,6 @@ func (vm *VM) exec(ins uint16) error {
 		} else {
 			vm.pc += 2
 		}
-		break
 	case 0x4000:
 		logInstruction(ins, "Skip the next instrunction if vX != nn.")
 		if uint16(vm.registers[vX]) != nn {
@@ -168,7 +168,6 @@ func (vm *VM) exec(ins uint16) error {
 		} else {
 			vm.pc += 2
 		}
-		break
 	case 0x5000:
 		logInstruction(ins, "Skip the next instrunction if vX != vY.")
 		if uint16(vm.registers[vX]) == uint16(vm.registers[vY]) {
@@ -176,39 +175,32 @@ func (vm *VM) exec(ins uint16) error {
 		} else {
 			vm.pc += 2
 		}
-		break
 	case 0x6000:
 		logInstruction(ins, "Load value nn into vX.")
 		vm.registers[vX] = uint8(nn)
 		vm.pc += 2
-		break
 	case 0x7000:
 		logInstruction(ins, "Set vX = vX + nn.")
 		vm.registers[vX] += uint8(nn)
 		vm.pc += 2
-		break
 	case 0x8000:
 		switch n {
 		case 0x0:
 			logInstruction(ins, "Set vX = vY.")
 			vm.registers[vX] = vm.registers[vY]
 			vm.pc += 2
-			break
 		case 0x1:
 			logInstruction(ins, "Set vX |= vY.")
 			vm.registers[vX] |= vm.registers[vY]
 			vm.pc += 2
-			break
 		case 0x2:
 			logInstruction(ins, "Set vX &= vY.")
 			vm.registers[vX] &= vm.registers[vY]
 			vm.pc += 2
-			break
 		case 0x3:
 			logInstruction(ins, "Set vX ^= vY.")
 			vm.registers[vX] ^= vm.registers[vY]
 			vm.pc += 2
-			break
 		case 0x4:
 			logInstruction(ins, "Set vX = vX + vY, set VF = carry.")
 			var r uint16 = uint16(vm.registers[vX]) + uint16(vm.registers[vY])
@@ -219,7 +211,6 @@ func (vm *VM) exec(ins uint16) error {
 			}
 			vm.registers[vX] = uint8(r & 0x00ff)
 			vm.pc += 2
-			break
 		case 0x5:
 			logInstruction(ins, "Set vX = vX - vY, set VF = NOT borrow.")
 			if vm.registers[vX] > vm.registers[vY] {
@@ -229,13 +220,11 @@ func (vm *VM) exec(ins uint16) error {
 			}
 			vm.registers[vX] -= vm.registers[vY]
 			vm.pc += 2
-			break
 		case 0x6:
 			logInstruction(ins, "Set vX = vX SHR 1.")
 			vm.registers[0xf] = vm.registers[vX] & 1
 			vm.registers[vX] /= 2
 			vm.pc += 2
-			break
 		case 0x7:
 			logInstruction(ins, "Set vX = vX - vY, set VF = NOT borrow.")
 			if vm.registers[vY] > vm.registers[vX] {
@@ -245,13 +234,11 @@ func (vm *VM) exec(ins uint16) error {
 			}
 			vm.registers[vX] = vm.registers[vY] - vm.registers[vX]
 			vm.pc += 2
-			break
 		case 0xe:
 			logInstruction(ins, "Set vX = vX SHL 1.")
 			vm.registers[0xf] = vm.registers[vX] >> 7
 			vm.registers[vX] *= 2
 			vm.pc += 2
-			break
 		}
 	case 0x9000:
 		logInstruction(ins, "Skip next instrunction if vX != vY.")
@@ -260,31 +247,24 @@ func (vm *VM) exec(ins uint16) error {
 		} else {
 			vm.pc += 2
 		}
-		break
 	case 0xa000:
 		logInstruction(ins, "Set vI to nnn.")
 		vm.ir = nnn
 		vm.pc += 2
-		break
 	case 0xb000:
 		logInstruction(ins, "Jump to location nnn + v0.")
 		vm.pc = uint16(vm.registers[0]) + nnn
-		break
 	case 0xc000:
 		logInstruction(ins, "Set vX = random byte AND nn.")
-		for {
-			s := rand.NewSource(time.Now().UnixMilli())
-			r := rand.New(s)
-			num := uint16(r.Intn(255))
+		s := rand.NewSource(time.Now().UnixMilli())
+		r := rand.New(s)
+		num := uint16(r.Intn(255))
 
-			val := uint8(num & nn)
-			if vm.registers[vX] != val {
-				vm.registers[vX] = val
-				break
-			}
+		val := uint8(num & nn)
+		if vm.registers[vX] != val {
+			vm.registers[vX] = val
 		}
 		vm.pc += 2
-		break
 	case 0xd000:
 		logInstruction(ins, "Draw.")
 
@@ -307,7 +287,6 @@ func (vm *VM) exec(ins uint16) error {
 			}
 		}
 		vm.pc += 2
-		break
 	case 0xe000:
 		switch nn {
 		case 0x9e:
@@ -317,7 +296,6 @@ func (vm *VM) exec(ins uint16) error {
 			} else {
 				vm.pc += 2
 			}
-			break
 		case 0xa1:
 			logInstruction(ins, "Skip next instrunction if key with value of vX is not pressed.")
 			if vm.Keys[vm.registers[vX]] == 0 {
@@ -325,37 +303,30 @@ func (vm *VM) exec(ins uint16) error {
 			} else {
 				vm.pc += 2
 			}
-			break
 		}
-		break
 	case 0xf000:
 		switch nn {
 		case 0x7:
 			logInstruction(ins, "Set vX = delay timer value.")
 			vm.registers[vX] = uint8(vm.dt)
 			vm.pc += 2
-			break
 		case 0xa:
-			logInstruction(ins, "Wait for a key press. Store the value of the key in vX.")
+			logInstruction(ins, "Wait kor a key press. Store the value of the key in vX.")
 			for i, k := range vm.Keys {
 				if k == 1 {
 					vm.registers[vX] = uint8(i)
 					vm.Keys[i] = 0
 					vm.pc += 2
-					break
 				}
 			}
-			break
 		case 0x15:
 			logInstruction(ins, "Set the delay timer to vX.")
 			vm.dt = vm.registers[vX]
 			vm.pc += 2
-			break
 		case 0x18:
 			logInstruction(ins, "Set sound timer = vX.")
 			vm.st = vm.registers[vX]
 			vm.pc += 2
-			break
 		case 0x1e:
 			logInstruction(ins, "Set I = I + vX.")
 			vm.ir += uint16(vm.registers[vX])
@@ -363,7 +334,6 @@ func (vm *VM) exec(ins uint16) error {
 				vm.registers[0xf] = 1
 			}
 			vm.pc += 2
-			break
 		case 0x29:
 			// Find the character in the font map
 			// Set the ir to point to the right
@@ -377,7 +347,6 @@ func (vm *VM) exec(ins uint16) error {
 			}
 			vm.ir = uint16(p)
 			vm.pc += 2
-			break
 		case 0x33:
 			logInstruction(ins, "Store BCD representation of vX in memory location I, I+1, and I+2")
 			// 128
@@ -391,24 +360,21 @@ func (vm *VM) exec(ins uint16) error {
 			vm.memory[vm.ir+2] = d
 
 			vm.pc += 2
-			break
 		case 0x55:
 			logInstruction(ins, "Store registers v0 through vX in memory locations I.")
 			for r := 0; r <= int(vX); r++ {
 				vm.memory[vm.ir+uint16(r)] = vm.registers[r]
 			}
 			vm.pc += 2
-			break
 		case 0x65:
 			logInstruction(ins, "Read registers v0 through vX from memory starting at location I.")
 			for i := 0; i <= int(vX); i++ {
 				vm.registers[i] = vm.memory[vm.ir+uint16(i)]
 			}
 			vm.pc += 2
-			break
 		}
 	default:
-		return errors.New(fmt.Sprintf("Unsupported instruction: %04x", ins))
+		return fmt.Errorf("Unsupported instruction: %04x", ins)
 	}
 
 	return nil

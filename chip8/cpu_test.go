@@ -51,7 +51,7 @@ func TestClearsDisplay(t *testing.T) {
 
 	vm.Vram[Rows/2][Rows/2] = 1
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	for y := 0; y < Rows; y++ {
 		for x := 0; x < Cols; x++ {
@@ -68,7 +68,7 @@ func TestReturnsFromASubroutine(t *testing.T) {
 
 	vm.sp = uint8(addr)
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.pc != addr && vm.sp != uint8(addr)-1 {
 		t.Fail()
@@ -82,7 +82,7 @@ func TestSkipsNextInsIfNNIsEqualToRegisterX(t *testing.T) {
 	initialPc := vm.pc
 	vm.registers[reg] = uint8(ins & 0x00ff)
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if !hasSkipped(initialPc, vm.pc) {
 		t.Fail()
@@ -96,7 +96,7 @@ func TestSkipsNextInsIfRegXNotEqualsNN(t *testing.T) {
 	initialPc := vm.pc
 	vm.registers[x] = 0x0012 // random value
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if !hasSkipped(initialPc, vm.pc) {
 		t.Fail()
@@ -112,7 +112,7 @@ func TestSkipsNextInsIfRegXEqualsRegY(t *testing.T) {
 	vm.registers[rY] = 0x1
 	initialPc := vm.pc
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if !hasSkipped(initialPc, vm.pc) {
 		t.Fail()
@@ -122,7 +122,7 @@ func TestSkipsNextInsIfRegXEqualsRegY(t *testing.T) {
 func TestValueNNIsSetToRegisterX(t *testing.T) {
 	var ins uint16 = 0x6a02
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if uint16(vm.registers[registerX(ins)]) != nn(ins) {
 		t.Fail()
@@ -136,7 +136,7 @@ func TestAddsNNValueToRegisterX(t *testing.T) {
 	vm.registers[rX] = 1
 	expected := uint8(1 + (ins & 0x00ff))
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[rX] != expected {
 		t.Fail()
@@ -150,7 +150,7 @@ func TestStoresValueOfRegXInRegY(t *testing.T) {
 
 	vm.registers[rY] = 1
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[rX] != vm.registers[rY] {
 		t.Fail()
@@ -165,7 +165,7 @@ func TestStoresBitwiseOrOnRegXAndRegYAndStoresInRegX(t *testing.T) {
 	vm.registers[rX] = 0x0
 	vm.registers[rY] = 0xf
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[rX] != 0xf {
 		t.Fail()
@@ -180,7 +180,7 @@ func TestStoresBitwiseAndOnRegXAndRegYAndStoresInRegX(t *testing.T) {
 	vm.registers[rX] = 0x0
 	vm.registers[rY] = 0xf
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[rX] == 0xf {
 		t.Fail()
@@ -195,7 +195,7 @@ func TestStoresBitwiseXorOnRegXAndRegYAndStoresInRegX(t *testing.T) {
 	vm.registers[rX] = 0x0
 	vm.registers[rY] = 0x0
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[rX] == 0xf {
 		t.Fail()
@@ -210,7 +210,7 @@ func TestSetsCarryFlagTo1IfAdditionResultIsGreaterThan8Bits(t *testing.T) {
 	vm.registers[rX] = 250
 	vm.registers[rY] = 10
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[0xf] == 0 {
 		t.Fail()
@@ -224,7 +224,7 @@ func TestSetsCarryFlagTo1IfRegXGreaterThanRegY(t *testing.T) {
 	vm.registers[rX] = 3
 	vm.registers[rY] = 2
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[0xf] == 0 {
 		t.Fail()
@@ -238,7 +238,7 @@ func TestRegYIsSubstractedFromRegX(t *testing.T) {
 	vm.registers[rX] = 3
 	vm.registers[rY] = 2
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[rX] != 1 {
 		t.Fail()
@@ -251,7 +251,7 @@ func TestSetsCarryFlagTo1IfLeastSignifcantBitIs1(t *testing.T) {
 
 	vm.registers[rX] = 0x0f
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[0xf] != 1 {
 		t.Fail()
@@ -259,7 +259,7 @@ func TestSetsCarryFlagTo1IfLeastSignifcantBitIs1(t *testing.T) {
 
 	vm.registers[rX] = 0x0
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[0xf] != 0 {
 		t.Fail()
@@ -274,7 +274,7 @@ func TestRegXGetsDividedBy2(t *testing.T) {
 
 	vm.registers[rX] = val
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[rX] != 3 {
 		t.Fail()
@@ -288,7 +288,7 @@ func TestSetsCarryFlagTo1IfRegYGreaterThatRegX(t *testing.T) {
 	vm.registers[rX] = 2
 	vm.registers[rY] = 3
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[0xf] == 0 {
 		t.Fail()
@@ -302,7 +302,7 @@ func TestRegXIsSubtractedFromRegYAndStoredInRegX(t *testing.T) {
 	vm.registers[rX] = 2
 	vm.registers[rY] = 3
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[rX] != 1 {
 		t.Fail()
@@ -315,7 +315,7 @@ func TestSetsCarryFlagTo1IfMostSignificantBitOfRegXIs1(t *testing.T) {
 
 	vm.registers[rX] = 128 // 10000000
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[0xf] != 1 {
 		t.Fail()
@@ -328,7 +328,7 @@ func TestRegXGetsMultipliedByTwo(t *testing.T) {
 
 	vm.registers[rX] = 2
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[rX] != 4 {
 		t.Fail()
@@ -343,7 +343,7 @@ func TestSkipsNextInsIfRegXAndRegYAreEqual(t *testing.T) {
 	vm.registers[rX] = 1
 	vm.registers[rY] = 0
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if !hasSkipped(initialPc, vm.pc) {
 		t.Fail()
@@ -354,7 +354,7 @@ func TestSetsRegIToNNN(t *testing.T) {
 	var ins uint16 = 0xa2f0
 	var nnn uint16 = ins & 0x0fff
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.ir != nnn {
 		t.Fail()
@@ -367,7 +367,7 @@ func TestJumpsToLocationNNNAndAddsRegister0(t *testing.T) {
 
 	vm.registers[0] = 1
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.pc != (uint16(vm.registers[0]) + nnn) {
 		t.Fail()
@@ -380,7 +380,7 @@ func TestSetsRegXToRandomgByte(t *testing.T) {
 
 	vm.registers[rX] = 1
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[rX] == 1 {
 		t.Fail()
@@ -392,7 +392,7 @@ func TestWaitsForKeyInput(t *testing.T) {
 	x, _ := registersXAndYFromIns(ins)
 	vm.Keys[4] = 1
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[x] != 4 {
 		t.Fail()
@@ -405,7 +405,7 @@ func TestSetsRegisterXToDelayTimerValue(t *testing.T) {
 	var expected uint16 = 0x6
 	vm.dt = uint8(expected)
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.registers[x] != uint8(expected) {
 		t.Fail()
@@ -418,7 +418,7 @@ func TestSetsDelayTimerToTheValueOfVx(t *testing.T) {
 	var expected uint8 = 0x6
 	vm.registers[x] = expected
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.dt != expected {
 		t.Fail()
@@ -431,7 +431,7 @@ func TestSetsSoundTimerToTheValueOfVx(t *testing.T) {
 	var expected uint8 = 0x1
 	vm.registers[x] = expected
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.st != expected {
 		t.Fail()
@@ -445,7 +445,7 @@ func TestIRegistersGetVXAddedToItAndCarries(t *testing.T) {
 	vm.registers[x] = 1
 	vm.ir = 0xfff
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.ir != uint16(expected) {
 		t.Fail()
@@ -462,7 +462,7 @@ func TestSetsFontCharacter(t *testing.T) {
 	var expected uint8 = 5
 	vm.registers[x] = 1
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.ir != uint16(expected) {
 		t.Fail()
@@ -474,7 +474,7 @@ func TestStoresBCDRepresentationofRegX(t *testing.T) {
 	var x, _ = registersXAndYFromIns(ins)
 	vm.registers[x] = 128
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	if vm.memory[vm.ir] != 1 {
 		t.Fail()
@@ -494,7 +494,7 @@ func TestStoresRegistersFromV0ToVxInMemory(t *testing.T) {
 	vm.registers[1] = 2
 	vm.registers[2] = 3
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	for i := 0; i <= int(x); i++ {
 		if vm.memory[vm.ir+uint16(i)] != uint8(i)+1 {
@@ -510,7 +510,7 @@ func TestLoadsFromMemoryIntoRegisters(t *testing.T) {
 	vm.memory[vm.ir+1] = 2
 	vm.memory[vm.ir+2] = 3
 
-	vm.exec(ins)
+	_ = vm.exec(ins)
 
 	for i := 0; i <= int(x); i++ {
 		if vm.registers[uint16(i)] != uint8(i)+1 {

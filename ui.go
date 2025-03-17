@@ -1,6 +1,6 @@
 // ui of the emulator goes here. This includes the root
 // container, the list widget that allows the user to
-// selecct a game and the game window itself.
+// select a game and the game window itself.
 
 package main
 
@@ -14,7 +14,7 @@ import (
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	text "github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 type listItem struct {

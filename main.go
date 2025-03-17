@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ebitengine/oto/v3"
+	oto "github.com/ebitengine/oto/v3"
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -28,8 +28,7 @@ const (
 )
 
 var (
-	square *ebiten.Image
-	game   *Game
+	game *Game
 
 	//go:embed static/roms/*.ch8
 	roms embed.FS
@@ -57,7 +56,10 @@ type Game struct {
 }
 
 func (g *Game) Update() error {
-	g.c8.Cycle()
+	err := g.c8.Cycle()
+	if err != nil {
+		return err
+	}
 
 	g.c8.Keys[0x1] = uint8(btoi(ebiten.IsKeyPressed(ebiten.Key1)))
 	g.c8.Keys[0x2] = uint8(btoi(ebiten.IsKeyPressed(ebiten.Key2)))
