@@ -26,5 +26,4 @@ jobs:
         with:
           version: v1.64.7
           skip-cache: true
-          args: --fix
 
