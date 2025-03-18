@@ -7,8 +7,6 @@ This project is a CHIP-8 virtual machine (interpreter) written in Go. The CHIP-8
 ## Features
 
 - Full CHIP-8 instruction set implementation
-- Support for loading and running CHIP-8 ROM files
-- 64x32 display resolution (for original CHIP-8)
 - Basic input support via keyboard
 - Timers (delay and sound)
 - Simple, extensible codebase
@@ -62,5 +60,5 @@ A S D F   -->  7 8 9 E
 Z X C V   -->  A 0 B F
 ```
 
-- Use these keys to control games, as each game may have different key mappings.
+- Use these keys to control games. Each game may have different key mappings.
 
