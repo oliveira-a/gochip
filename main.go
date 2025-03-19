@@ -172,9 +172,8 @@ func main() {
 
 	ebiten.SetWindowSize(winWidth+romListWidth, winHeight)
 
-	// A go routine that listens for audio evenst through
-	// the beep channel. Plays the sound from the 'beep.mp3'
-	// sound.
+	// A go routine that listens for audio events through
+	// the beep channel. Plays the sound from 'beep.mp3'
 	go listenForAudio()
 
 	if err = ebiten.RunGame(game); err != nil {
