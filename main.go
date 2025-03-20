@@ -87,7 +87,11 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("FPS: %f", ebiten.ActualFPS()), 0, 0)
+	ebitenutil.DebugPrintAt(
+		screen,
+		fmt.Sprintf("FPS: %f", ebiten.ActualFPS()),
+		0, 0,
+	)
 
 	screen.Fill(backgroundColor)
 	g.tile.Fill(tileColor)
@@ -96,7 +100,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		for y := 0; y < chip8.Rows; y++ {
 			if g.c8.Vram[x][y] == 1 {
 				opts := &ebiten.DrawImageOptions{}
-				opts.GeoM.Translate(float64(x*tileSize)+romListWidth, float64(y*tileSize))
+				opts.GeoM.Translate(
+					float64(x*tileSize)+romListWidth,
+					float64(y*tileSize),
+				)
 				screen.DrawImage(g.tile, opts)
 			}
 		}
@@ -105,7 +112,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.ui.Draw(screen)
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (g *Game) Layout(
+	outsideWidth,
+	outsideHeight int,
+) (screenWidth, screenHeight int) {
 	return outsideWidth, outsideHeight
 }
 
@@ -113,9 +123,8 @@ func main() {
 
 	// UI setup
 	//
-	// Scan all of the available ROMs in the static/roms
-	// directory and extract their name to create list items
-	// for the romList rom selection.
+	// Scan the ROMs in static/roms and extract their name
+	// for the list items.
 	entries, err := fs.ReadDir(roms, "static/roms")
 	if err != nil {
 		log.Fatal(err)
@@ -156,7 +165,8 @@ func main() {
 
 	root := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
-		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.ContextMenu(tickRateContextMenu)),
+		widget.ContainerOpts.WidgetOpts(
+			widget.WidgetOpts.ContextMenu(tickRateContextMenu)),
 	)
 	root.AddChild(romList)
 
@@ -197,6 +207,7 @@ func listenForAudio() {
 	otoCtx, readyChan, err := oto.NewContext(op)
 	if err != nil {
 		log.Printf("Error creating new audio context: %s\n", err)
+		return
 	}
 	<-readyChan
 
