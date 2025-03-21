@@ -11,8 +11,6 @@ import (
 const (
 	Cols  = 64
 	Rows  = 32
-	Scale = 10
-	Fps   = 60
 )
 
 var debug bool
