@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	Cols  = 64
-	Rows  = 32
+	Cols = 64
+	Rows = 32
 )
 
 var debug bool
@@ -52,42 +52,49 @@ func init() {
 func New(audio chan int, debugMode bool) *VM {
 	debug = debugMode
 
-	cpu := &VM{
+	vm := &VM{
 		pc:    0x200,
 		audio: audio,
 	}
 
-	copy(font[:], cpu.memory[0:len(font)])
+	vm.reset()
 
-	return cpu
+	return vm
 }
 
-func (c *VM) LoadRom(b []byte) error {
-	if len(b) > len(c.memory)-512 {
-		return errors.New("Rom buffer has exceeded the maximum size.")
-	}
-
-	c.pc = 0x200
-	c.ir = 0
-	c.sp = 0
-	c.dt = 0
-	c.st = 0
+// Resets the vm memory to its initial state and reloads the font map.
+func (vm *VM) reset() {
+	vm.pc = 0x200
+	vm.ir = 0
+	vm.sp = 0
+	vm.dt = 0
+	vm.st = 0
 
 	// ensure memory is cleared
-	for i := c.pc; i < uint16(len(c.memory)); i++ {
-		c.memory[uint16(i)] = 0
+	for i := vm.pc; i < uint16(len(vm.memory)); i++ {
+		vm.memory[uint16(i)] = 0
 	}
 
 	// ensure vram is cleared
 	for y := 0; y < Rows; y++ {
 		for x := 0; x < Cols; x++ {
-			c.Vram[x][y] = 0
+			vm.Vram[x][y] = 0
 		}
 	}
 
+	copy(font[:], vm.memory[0:len(font)])
+}
+
+func (vm *VM) LoadRom(b []byte) error {
+	if len(b) > len(vm.memory)-512 {
+		return errors.New("Rom buffer has exceeded the maximum size.")
+	}
+
+	vm.reset()
+
 	// load the buffer into memory
 	for i := 0; i < len(b); i++ {
-		c.memory[c.pc+uint16(i)] = b[i]
+		vm.memory[vm.pc+uint16(i)] = b[i]
 	}
 
 	return nil
