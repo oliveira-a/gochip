@@ -410,9 +410,7 @@ func nnn(ins uint16) uint16 {
 }
 
 func logInstruction(ins uint16, msg string) {
-	if !debug {
-		return
+	if debug {
+		log.Printf("| Executing '%04x': %s\n", ins, msg)
 	}
-
-	log.Printf("| Executing '%04x': %s\n", ins, msg)
 }

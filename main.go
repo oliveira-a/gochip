@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"embed"
+	"flag"
 	"fmt"
 	"image/color"
 	"io"
@@ -40,6 +41,9 @@ var (
 
 	backgroundColor color.Color = color.Black
 	tileColor       color.Color = color.White
+
+	debugModePtr = flag.Bool("debug", false, "Debug mode logs instructions to stdout.")
+	tickRatePtr  = flag.Int("tick", 60, "Start the emulator with a specified tick rate.")
 )
 
 // The single global game state structure that is created
@@ -119,6 +123,10 @@ func (g *Game) Layout(
 	return outsideWidth, outsideHeight
 }
 
+func init() {
+	flag.Parse()
+}
+
 func main() {
 
 	// UI setup
@@ -174,11 +182,13 @@ func main() {
 	game = &Game{
 		ui: &ebitenui.UI{Container: root},
 
-		// todo: create a program flag for debug mode
-		c8: chip8.New(beepChan, false),
+		c8: chip8.New(beepChan, *debugModePtr),
 
 		tile: ebiten.NewImage(tileSize, tileSize),
 	}
+
+	// set the default tick rate
+	ebiten.SetTPS(*tickRatePtr)
 
 	ebiten.SetWindowSize(winWidth+romListWidth, winHeight)
 
