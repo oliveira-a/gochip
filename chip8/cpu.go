@@ -53,7 +53,6 @@ func New(audio chan int, debugMode bool) *VM {
 	debug = debugMode
 
 	vm := &VM{
-		pc:    0x200,
 		audio: audio,
 	}
 
@@ -82,7 +81,7 @@ func (vm *VM) reset() {
 		}
 	}
 
-	copy(font[:], vm.memory[0:len(font)])
+	copy(vm.memory[0:len(font)], font[:])
 }
 
 func (vm *VM) LoadRom(b []byte) error {
