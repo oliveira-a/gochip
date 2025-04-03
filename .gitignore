@@ -24,3 +24,4 @@ go.work
 .DS_Store
 
 gochip
+static/roms/test.ch8
